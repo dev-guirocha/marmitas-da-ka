@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Pedido - Marmitas da Ka</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="checkout-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+    </div>
+
+    <div class="background-container">
+        <div class="checkout-page-container" id="container">
+            <div class="form-container cart-container">
+                <div class="form-header">
+                    <h2><i class="fas fa-shopping-cart"></i> Revise seu Pedido</h2>
+                </div>
+                <div class="form-content" id="cart-content">
+                    <div id="cart-summary"><p class="loading">Carregando seu carrinho...</p></div>
+                    <div class="cart-total">
+                        <strong>Total:</strong>
+                        <strong id="total-price">R$ 0,00</strong>
+                    </div>
+                    <div class="payment-methods">
+                        <h3>Forma de Pagamento</h3>
+                        <div class="payment-options">
+                            <label for="pix" class="payment-option">
+                                <input type="radio" id="pix" name="payment" value="pix" checked>
+                                <div class="payment-details">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>PIX</span>
+                                </div>
+                            </label>
+                            <label for="credit" class="payment-option">
+                                <input type="radio" id="credit" name="payment" value="credit">
+                                <div class="payment-details">
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Crédito</span>
+                                </div>
+                            </label>
+                            <label for="debit" class="payment-option">
+                                <input type="radio" id="debit" name="payment" value="debit">
+                                <div class="payment-details">
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Débito</span>
+                                </div>
+                            </label>
+                            <label for="cash" class="payment-option">
+                                <input type="radio" id="cash" name="payment" value="cash">
+                                <div class="payment-details">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span>Dinheiro</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <div class="form-container delivery-container">
+                <form id="delivery-form">
+                    <div class="form-header">
+                        <h2><i class="fas fa-map-marker-alt"></i> Dados da Entrega</h2>
+                    </div>
+                    <div class="form-content">
+                        <div class="delivery-notice">
+                            <p>Entregas apenas em <strong>Aracaju, SE</strong>.</p>
+                        </div>
+                        <input type="tel" id="cep" placeholder="CEP" required maxlength="9">
+                        <input type="text" id="endereco" placeholder="Endereço (Rua, Av.)" required>
+                        <div class="form-row">
+                            <input type="text" id="numero" placeholder="Número" required>
+                            <input type="text" id="bairro" placeholder="Bairro" required>
+                        </div>
+                        <input type="text" id="complemento" placeholder="Complemento (Apto, Bloco, etc.)">
+                        <textarea id="referencia" placeholder="Ponto de Referência" rows="2"></textarea>
+                        
+                        <div class="delivery-time">
+                            <h3>Horário de Entrega</h3>
+                            <select id="delivery-time-select" required>
+                                <option value="" disabled selected>Selecione um horário</option>
+                                <option value="manha">Manhã (8h - 12h)</option>
+                                <option value="tarde">Tarde (13h - 18h)</option>
+                                <option value="noite">Noite (18h - 22h)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-large btn-finish-order">Finalizar Pedido</button>
+                    </div>
+                </form>
+            </div>
+    
+            <div class="overlay-container">
+                <div class="overlay">
+                    <div class="overlay-panel overlay-left">
+                        <h1>Quase lá!</h1>
+                        <p>Falta pouco! Preencha seus dados para receber suas marmitas quentinhas em casa.</p>
+                        <button class="ghost action-button" id="goToCart">Revisar Carrinho</button>
+                    </div>
+                    <div class="overlay-panel overlay-right">
+                        <h1>Tudo certo por aqui?</h1>
+                        <p>Confirme os itens e o valor. Se estiver tudo OK, clique abaixo para ir para a entrega.</p>
+                        <button class="ghost action-button" id="goToDelivery">Confirmar e Ir para Entrega</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="checkout-footer">
+        <a href="../login/dashboard/dashboard.html"><i class="fas fa-arrow-left"></i> Voltar para a Loja</a>
+    </footer>
+
+    <script src="checkout-script.js"></script>
+</body>
+</html>

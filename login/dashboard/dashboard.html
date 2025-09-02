@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Conta - Marmitas da Ka</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="dashboard-style.css">
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+    </div>
+
+    <header>
+        <nav class="navbar">
+            <a href="../../index.html" class="logo">Marmitas da <span class="logo-ka">Ka</span></a>
+            <div class="nav-links" id="navLinks">
+                <a href="#pacotes">Pacotes</a>
+                <a href="#cardapio">Cardápio</a>
+                <a href="javascript:void(0);" class="wip">Meus Pedidos</a>
+                <a href="../../index.html" class="mobile-only">Voltar para Home</a>
+            </div>
+            <div class="nav-actions">
+                <div class="user-info"><span>Olá, Guirocha</span></div>
+                <div class="cart-info hidden">
+                    <a href="../../checkout/finalizar-pedido.html" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="cart-count">0</span>
+                        <span id="cart-total">R$ 0,00</span>
+                    </a>
+                </div>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="welcome" class="section-container">
+            <div class="hero-box">
+                <h1>Sua jornada saudável continua aqui</h1>
+                <p>Escolha um pacote ou monte seu cardápio com nossos pratos frescos e deliciosos.</p>
+                <div class="hero-buttons">
+                    <a href="#pacotes" class="btn btn-primary">Ver Pacotes</a>
+                    <a href="#cardapio" class="btn btn-secondary">Ver Cardápio</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="pacotes" class="section-container">
+            <h2>Nossos Pacotes</h2>
+            <p class="section-subtitle">Escolha um plano para começar e depois selecione suas marmitas favoritas no cardápio abaixo.</p>
+            <div class="pacotes-grid">
+                <div class="pacote-card">
+                    <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 5 marmitas">
+                    <h3>Pacote Semanal</h3><h4>5 Marmitas</h4>
+                    <p>Ideal para garantir seus almoços saudáveis durante a semana.</p>
+                    <span class="price">R$ 99,90</span>
+                    <button class="btn btn-primary add-package-to-cart" data-price="99.90" data-name="Pacote Semanal" data-credits="5">Quero Esse</button>
+                </div>
+                <div class="pacote-card popular">
+                    <span class="tag">Mais Popular</span>
+                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 10 marmitas">
+                    <h3>Pacote Quinzenal</h3><h4>10 Marmitas</h4>
+                    <p>Economia e praticidade para duas semanas de alimentação equilibrada.</p>
+                    <span class="price">R$ 189,90</span>
+                    <button class="btn btn-primary add-package-to-cart" data-price="189.90" data-name="Pacote Quinzenal" data-credits="10">Quero Esse</button>
+                </div>
+                <div class="pacote-card">
+                    <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 20 marmitas">
+                    <h3>Pacote Mensal</h3><h4>20 Marmitas</h4>
+                    <p>A solução completa para um mês inteiro sem se preocupar com as refeições.</p>
+                    <span class="price">R$ 359,90</span>
+                    <button class="btn btn-primary add-package-to-cart" data-price="359.90" data-name="Pacote Mensal" data-credits="20">Quero Esse</button>
+                </div>
+                <div class="pacote-card personalizado">
+                    <i class="fas fa-pencil-alt fa-3x"></i>
+                    <h3>Pacote Personalizado</h3><h4>Você no comando</h4>
+                    <p>Escolha quantas marmitas vão cuidar de você durante o mês.</p>
+                    <a href="#cardapio" class="btn btn-primary">Montar Agora</a>
+                </div>
+            </div>
+            
+            <div class="cart-status" id="cartStatus">
+                <div class="status-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Selecione um pacote para começar a adicionar marmitas</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="cardapio" class="section-container">
+            <h2>Nosso Cardápio</h2>
+            <p class="section-subtitle">Clique em "Adicionar" para escolher a quantidade de cada prato.</p>
+            
+            <div class="credits-info" id="creditsInfo">
+                <i class="fas fa-coins"></i>
+                <span id="credits-count">0</span> créditos disponíveis
+            </div>
+            
+            <div class="cardapio-wrapper">
+                <button class="slider-arrow prev"><i class="fas fa-chevron-left"></i></button>
+                <div class="menu-slider">
+                    <div class="menu-item" data-name="Frango Grelhado">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Frango Grelhado">
+                        <h3>Frango Grelhado</h3>
+                        <p class="item-description">Delicioso filé de frango grelhado com purê de batata doce e brócolis frescos.</p>
+                        <div class="item-footer">
+                            <div class="quantity-selector">
+                                <button class="btn-qty minus" aria-label="Remover um">-</button>
+                                <span class="quantity">0</span>
+                                <button class="btn-qty plus" aria-label="Adicionar um">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item" data-name="Salmão ao Forno">
+                        <img src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Salmão ao Forno">
+                        <h3>Salmão ao Forno</h3>
+                        <p class="item-description">Posta de salmão assada com ervas finas, acompanha arroz integral e legumes.</p>
+                        <div class="item-footer">
+                            <div class="quantity-selector">
+                                <button class="btn-qty minus" aria-label="Remover um">-</button>
+                                <span class="quantity">0</span>
+                                <button class="btn-qty plus" aria-label="Adicionar um">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item" data-name="Patinho Moído">
+                        <img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Patinho Moído">
+                        <h3>Patinho Moído</h3>
+                        <p class="item-description">Carne de patinho moída e refogada, servida com macarrão integral.</p>
+                        <div class="item-footer">
+                            <div class="quantity-selector">
+                                <button class="btn-qty minus" aria-label="Remover um">-</button>
+                                <span class="quantity">0</span>
+                                <button class="btn-qty plus" aria-label="Adicionar um">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item" data-name="Lasanha de Berinjela">
+                        <img src="https://images.unsplash.com/photo-1606755962773-d324e0a13086?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Lasanha de Berinjela">
+                        <h3>Lasanha de Berinjela</h3>
+                        <p class="item-description">Lasanha de berinjela com queijo cottage e molho de tomate caseiro.</p>
+                        <div class="item-footer">
+                            <div class="quantity-selector">
+                                <button class="btn-qty minus" aria-label="Remover um">-</button>
+                                <span class="quantity">0</span>
+                                <button class="btn-qty plus" aria-label="Adicionar um">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="slider-arrow next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            
+            <div class="navigation-dots">
+                <span class="dot active" data-index="0"></span>
+                <span class="dot" data-index="1"></span>
+                <span class="dot" data-index="2"></span>
+                <span class="dot" data-index="3"></span>
+            </div>
+        </section>
+        
+        <section id="order-summary" class="section-container hidden">
+            <h2>Resumo do Pedido</h2>
+            <div class="order-summary-content">
+                <div id="order-items"></div>
+                <div class="order-total">
+                    <strong>Total: <span id="order-total-price">R$ 0,00</span></strong>
+                </div>
+                <a href="../../checkout/finalizar-pedido.html" class="btn btn-primary btn-large">Finalizar Pedido</a>
+            </div>
+        </section>
+    </main>
+    
+    <div class="floating-cart" id="floatingCart">
+        <div class="cart-icon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-badge" id="floatingCartCount">0</span>
+        </div>
+        <div class="cart-preview hidden">
+            <h4>Seu Carrinho</h4>
+            <div id="cart-preview-items"></div>
+            <div class="cart-preview-total">
+                Total: <span id="cart-preview-total">R$ 0,00</span>
+            </div>
+            <a href="../../checkout/finalizar-pedido.html" class="btn btn-primary btn-small">Finalizar Compra</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Criado com <i class="fas fa-heart"></i> por <a href="#" target="_blank">Dev.Guirocha</a></p>
+        <p>&copy; 2025 Marmitas da Ka. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="dashboard-script.js"></script>
+</body>
+</html>

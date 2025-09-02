@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marmitas da Ka - Comida Saudável e Prática</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+    </div>
+
+    <header>
+        <nav class="navbar">
+            <a href="#inicio" class="logo">Marmitas da <span class="logo-ka">Ka</span></a>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="#inicio">Início</a>
+                <a href="#pacotes">Pacotes</a>
+                <a href="#sobre">Sobre</a>
+                <a href="#contato">Contato</a>
+            </div>
+            
+            <div class="nav-actions">
+                <a href="login/login.html" class="btn btn-login"><i class="fas fa-user"></i> Login / Cadastro</a>
+            </div>
+            
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="inicio" class="section-container">
+            <div class="hero-box">
+                <h1>Comece hoje a cuidar do seu bem mais precioso</h1>
+                <p>Sabor, saúde e praticidade que cabem na sua rotina.</p>
+                <div class="hero-buttons">
+                    <a href="#pacotes" class="btn btn-primary">Ver Pacotes</a>
+                    <a href="https://wa.me/5579999999999?text=Olá!%20Gostaria%20de%20mais%20informações." target="_blank" class="btn btn-secondary">Fale Conosco</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="pacotes" class="section-container">
+            <h2>Nossos Pacotes</h2>
+            <p class="section-subtitle">
+                O primeiro passo para uma rotina mais prática e saudável começa aqui. Escolha seu pacote e, na etapa seguinte, monte seu cardápio personalizado com dezenas de opções deliciosas.
+            </p>
+            <div class="pacotes-grid">
+                <div class="pacote-card">
+                    <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 5 marmitas">
+                    <h3>Pacote Semanal</h3><h4>5 Marmitas</h4>
+                    <p>Ideal para garantir seus almoços saudáveis durante a semana.</p>
+                    <span class="price">R$ 99,90</span>
+                    <a href="login/login.html" class="btn btn-primary">Quero Esse</a>
+                </div>
+                <div class="pacote-card popular">
+                    <span class="tag">Mais Popular</span>
+                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 10 marmitas">
+                    <h3>Pacote Quinzenal</h3><h4>10 Marmitas</h4>
+                    <p>Economia e praticidade para duas semanas de alimentação equilibrada.</p>
+                    <span class="price">R$ 189,90</span>
+                    <a href="login/login.html" class="btn btn-primary">Quero Esse</a>
+                </div>
+                <div class="pacote-card">
+                    <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 20 marmitas">
+                    <h3>Pacote Mensal</h3><h4>20 Marmitas</h4>
+                    <p>A solução completa para um mês inteiro sem se preocupar com as refeições.</p>
+                    <span class="price">R$ 359,90</span>
+                    <a href="login/login.html" class="btn btn-primary">Quero Esse</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="sobre" class="section-container">
+            <h2>Nossa História</h2>
+            <div class="sobre-content">
+                <div class="sobre-foto">
+                    <img src="https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Foto da fundadora Ka">
+                </div>
+                <div class="sobre-texto">
+                    <h3>Feito com amor, por quem ama cozinhar</h3>
+                    <p>A paixão por uma alimentação saudável e saborosa sempre foi o centro da minha vida. A 'Marmitas da Ka' nasceu do desejo de compartilhar essa paixão, oferecendo comida de verdade, com sabor de casa e a praticidade que a vida moderna exige.</p>
+                    <p>Nossos pilares são: ingredientes frescos e selecionados, preparo cuidadoso e o bem-estar dos nossos clientes em primeiro lugar. Queremos fazer parte da sua jornada por uma vida mais saudável e gostosa.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="contato" class="section-container">
+            <h2>Entre em Contato</h2>
+            <div class="contato-wrapper">
+                <div class="contato-form">
+                    <form id="contactForm">
+                        <input type="text" name="name" placeholder="Seu Nome" required>
+                        <input type="email" name="email" placeholder="Seu E-mail" required>
+                        <input type="tel" name="phone" placeholder="Seu WhatsApp" required>
+                        <textarea name="message" rows="5" placeholder="Sua Mensagem" required></textarea>
+                        <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+                    </form>
+                </div>
+                <div class="contato-info">
+                    <h3>Outros canais</h3>
+                    <p><i class="fab fa-whatsapp"></i> <a href="https://wa.me/5579999999999?text=Olá!" target="_blank">(79) 99999-9999</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:contato@marmitasdaka.com.br">contato@marmitasdaka.com.br</a></p>
+                    <p><i class="fab fa-instagram"></i> <a href="#" target="_blank">@marmitasdaka</a></p>
+                    <h4>Horário de Atendimento</h4>
+                    <p><i class="fas fa-clock"></i> Seg a Sex, das 9h às 18h</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <a href="https://wa.me/5579999999999?text=Olá!%20Gostaria%20de%20mais%20informações." class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <footer>
+        <p>Criado com <i class="fas fa-heart"></i> por <a href="#" target="_blank">Dev.Guirocha</a></p>
+        <p>&copy; 2025 Marmitas da Ka. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
