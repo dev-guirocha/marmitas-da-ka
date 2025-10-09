@@ -214,3 +214,16 @@
             .form-container { width: 100%; }
             .container.right-panel-active .sign-in-container { transform: translateX(0); }
         }
+        .form-error-message {
+            display: block;
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 4px;
+            min-height: 18px; /* evita salto no layout */
+            transition: opacity 0.3s ease;
+            opacity: 0;
+          }
+          
+          .form-error-message.active {
+            opacity: 1;
+          }

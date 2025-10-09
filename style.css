@@ -7,6 +7,9 @@
     --light-text: #FFFFFF;
     --background-light: #F8F9FA;
     --font-family: 'Poppins', sans-serif;
+    --shadow-color: 224, 76, 255; /* Roxo em RGB */
+    --shadow-elevation-low: 0 3px 8px rgba(var(--shadow-color), 0.08);
+    --shadow-elevation-medium: 0 6px 16px rgba(var(--shadow-color), 0.12);
 }
 
 * {
@@ -15,6 +18,15 @@
     box-sizing: border-box;
     font-family: var(--font-family);
     scroll-behavior: smooth;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--secondary-purple);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(var(--shadow-color), 0.2);
 }
 
 body {
@@ -107,10 +119,11 @@ header {
 
 .nav-links a:hover::after {
     width: 100%;
+    background-color: var(--secondary-purple)
 }
 
 .nav-links a:hover {
-    color: var(--primary-green);
+    color: var(--secondary-purple);
 }
 
 .nav-actions .btn-login {
@@ -163,10 +176,11 @@ header {
     text-align: center;
 }
 
-h2 {
+h1, h2 {
     font-size: 2.5rem;
     margin-bottom: 20px;
     font-weight: 700;
+    letter-spacing: -0.5px;   /* adicionado */
     position: relative;
     display: inline-block;
 }
@@ -184,10 +198,11 @@ h2::after {
 
 .section-subtitle {
     font-size: 1.1rem;
-    color: #666;
+    color: #555;              /* era #666 */
     max-width: 700px;
-    margin: 30px auto 50px;
-    line-height: 1.6;
+    margin: 20px auto 50px;   /* era 30px auto 50px */
+    line-height: 1.7;         /* era 1.6 */
+    font-weight: 400;         /* novo */
 }
 
 #inicio {
@@ -245,13 +260,23 @@ h2::after {
     border-radius: 50px;
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     border: 2px solid transparent;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
 }
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  
+.btn:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
 
 .btn-primary {
     background-color: var(--primary-green);

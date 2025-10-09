@@ -749,3 +749,35 @@
 .modal-close-btn:hover {
     color: #333;
 }
+
+/* === Ponto 2.1: Feedback Visual na Seleção de Pacotes === */
+.pacotes-grid .pacote-card {
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease,
+      opacity 0.3s ease,
+      border-color 0.3s ease;
+    border: 3px solid transparent;
+  }
+  
+  .pacotes-grid.has-selection .pacote-card:not(.selected) {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+  
+  .pacotes-grid .pacote-card.selected {
+    border-color: var(--primary-green);
+    box-shadow: 0 8px 30px rgba(76, 175, 80, 0.2);
+  }
+
+  /* === Ponto 2.2: Desativação Proativa dos Botões de Adicionar === */
+.quantity-selector .btn-qty.plus:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Aviso visual nos créditos quando zerados */
+#creditsInfo.warning {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+}

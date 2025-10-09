@@ -6,6 +6,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveUser = (key, value) => { try { localStorage.setItem(key, value); } catch (_) {} };
   const redirect = (url) => { window.location.href = url; };
 
+  // Erros por campo
+  const showFieldError = (inputEl, message) => {
+    if (!inputEl) return;
+    const span = document.getElementById(`${inputEl.id}-error`);
+    if (span) {
+      span.textContent = message || '';
+      span.classList.add('active');
+    }
+    inputEl.setAttribute('aria-invalid', 'true');
+    inputEl.style.borderColor = 'red';
+  };
+  const clearFieldError = (inputEl) => {
+    if (!inputEl) return;
+    const span = document.getElementById(`${inputEl.id}-error`);
+    if (span) {
+      span.textContent = '';
+      span.classList.remove('active');
+    }
+    inputEl.removeAttribute('aria-invalid');
+    inputEl.style.borderColor = '';
+  };
+
   const showNotification = (message, type = 'success') => {
     qs('.notification')?.remove();
     const n = document.createElement('div');
@@ -56,13 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 1000);
 
-  // --- NOVO: LÓGICA PARA GUARDAR PACOTE ESCOLHIDO ANTES DO LOGIN ---
+  // --- NOVO: GUARDAR PACOTE PRÉ-SELECIONADO ANTES DO LOGIN ---
   const urlParams = new URLSearchParams(window.location.search);
   const selectedPackage = urlParams.get('package');
   if (selectedPackage) {
-    localStorage.setItem('selectedPackage', selectedPackage);
+    try { localStorage.setItem('selectedPackage', selectedPackage); } catch (_) {}
   }
-  // --- FIM DO NOVO BLOCO ---
+  // --- FIM DO BLOCO ---
 
   // ===== Elements =====
   const signUpButton  = qs('#signUp');
@@ -74,13 +96,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const strengthBar   = qs('.strength-bar');
   const strengthText  = qs('.strength-text');
 
+  // Inputs por ID (para mensagens por campo)
+  const signInEmailEl    = qs('#signInEmail') || qs('#signin-email') || qs('input[type="email"]', signInForm);
+  const signInPasswordEl = qs('#signInPassword') || qs('#signin-password') || qs('input[type="password"]', signInForm);
+  const signUpNameEl     = qs('#signUpName') || qs('input[name="name"]', signUpForm);
+  const signUpEmailEl    = qs('#signUpEmail') || qs('input[name="email"]', signUpForm);
+  const signUpPasswordEl = passwordInput || qs('input[name="password"]', signUpForm);
+  const signUpConfirmEl  = qs('#signUpConfirm') || qs('input[name="confirmPassword"]', signUpForm);
+
+  // Limpa erro ao digitar
+  [signInEmailEl, signInPasswordEl, signUpNameEl, signUpEmailEl, signUpPasswordEl, signUpConfirmEl]
+    .filter(Boolean)
+    .forEach((el) => {
+      el.addEventListener('input', () => clearFieldError(el));
+      el.addEventListener('blur',  () => {
+        // validações rápidas por campo (inline)
+        if (el === signInEmailEl || el === signUpEmailEl) {
+          if (el.value && !isEmail(el.value)) showFieldError(el, 'Insira um e-mail válido.');
+        }
+        if (el === signUpPasswordEl && el.value && el.value.length < 8) {
+          showFieldError(el, 'A senha deve ter pelo menos 8 caracteres.');
+        }
+        if (el === signUpConfirmEl && signUpPasswordEl) {
+          if (el.value && el.value !== signUpPasswordEl.value) {
+            showFieldError(el, 'As senhas não coincidem.');
+          }
+        }
+      });
+    });
+
   // ===== Toggle painéis =====
   signUpButton?.addEventListener('click', () => container?.classList.add('right-panel-active'));
   signInButton?.addEventListener('click', () => container?.classList.remove('right-panel-active'));
 
   // ===== Força da senha =====
-  if (passwordInput && strengthBar && strengthText) {
-    passwordInput.addEventListener('input', function () {
+  if (signUpPasswordEl && strengthBar && strengthText) {
+    signUpPasswordEl.addEventListener('input', function () {
       const password = this.value ?? '';
       let strength = 0;
       let message = 'Força da senha';
@@ -92,10 +143,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (/[^A-Za-z0-9]/.test(password)) strength++;
       }
       switch (strength) {
-        case 1: message = 'Fraca'; barColor = '#e74c3c'; break;
-        case 2: message = 'Moderada'; barColor = '#f39c12'; break;
-        case 3: message = 'Forte'; barColor = '#2ecc71'; break;
-        case 4: message = 'Muito Forte'; barColor = '#27ae60'; break;
+        case 1: message = 'Fraca';        barColor = '#e74c3c'; break;
+        case 2: message = 'Moderada';     barColor = '#f39c12'; break;
+        case 3: message = 'Forte';        barColor = '#2ecc71'; break;
+        case 4: message = 'Muito Forte';  barColor = '#27ae60'; break;
         default: message = 'Força da senha'; barColor = '#eee';
       }
       strengthBar.style.width = (strength * 25) + '%';
@@ -111,15 +162,34 @@ document.addEventListener('DOMContentLoaded', () => {
     signInForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const email    = qs('input[type="email"]', signInForm)?.value.trim() || '';
-      const password = qs('input[type="password"]', signInForm)?.value || '';
+      // limpa erros prévios
+      clearFieldError(signInEmailEl);
+      clearFieldError(signInPasswordEl);
 
-      if (!email || !password) {
-        showNotification('Por favor, preencha todos os campos.', 'error');
-        return;
+      const email    = (signInEmailEl?.value || '').trim();
+      const password = signInPasswordEl?.value || '';
+
+      let valid = true;
+
+      if (!email) {
+        showFieldError(signInEmailEl, 'Este campo é obrigatório.');
+        valid = false;
+      } else if (!isEmail(email)) {
+        showFieldError(signInEmailEl, 'Insira um e-mail válido.');
+        valid = false;
       }
-      if (!isEmail(email)) {
-        showNotification('Informe um e-mail válido.', 'error');
+
+      if (!password) {
+        showFieldError(signInPasswordEl, 'Este campo é obrigatório.');
+        valid = false;
+      } else if (password.length < 8) {
+        // opcionalmente aplique a mesma regra de 8 caracteres no login
+        showFieldError(signInPasswordEl, 'A senha deve ter pelo menos 8 caracteres.');
+        valid = false;
+      }
+
+      if (!valid) {
+        showNotification('Por favor, corrija os campos destacados.', 'error');
         return;
       }
 
@@ -137,53 +207,51 @@ document.addEventListener('DOMContentLoaded', () => {
     signUpForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const requiredInputs = qsa('input[required]', signUpForm);
-      const inputs = requiredInputs.length ? requiredInputs : qsa('input', signUpForm);
-      let isValid = true;
+      // limpa erros prévios
+      [signUpNameEl, signUpEmailEl, signUpPasswordEl, signUpConfirmEl].forEach(clearFieldError);
 
-      inputs.forEach((input) => {
-        const value = input.value?.trim();
-        if (!value) {
-          isValid = false;
-          input.style.borderColor = 'red';
-          setTimeout(() => { input.style.borderColor = ''; }, 3000);
-        }
-      });
+      const nameVal  = (signUpNameEl?.value || '').trim();
+      const emailVal = (signUpEmailEl?.value || '').trim();
+      const pwdVal   = signUpPasswordEl?.value || '';
+      const confVal  = signUpConfirmEl?.value || '';
 
-      if (!isValid) {
-        showNotification('Por favor, preencha todos os campos.', 'error');
+      let valid = true;
+
+      if (signUpNameEl && !nameVal) {
+        showFieldError(signUpNameEl, 'Este campo é obrigatório.');
+        valid = false;
+      }
+
+      if (signUpEmailEl && !emailVal) {
+        showFieldError(signUpEmailEl, 'Este campo é obrigatório.');
+        valid = false;
+      } else if (signUpEmailEl && !isEmail(emailVal)) {
+        showFieldError(signUpEmailEl, 'Insira um e-mail válido.');
+        valid = false;
+      }
+
+      if (signUpPasswordEl && !pwdVal) {
+        showFieldError(signUpPasswordEl, 'Este campo é obrigatório.');
+        valid = false;
+      } else if (signUpPasswordEl && pwdVal.length < 8) {
+        showFieldError(signUpPasswordEl, 'A senha deve ter pelo menos 8 caracteres.');
+        valid = false;
+      }
+
+      if (signUpConfirmEl && !confVal) {
+        showFieldError(signUpConfirmEl, 'Confirme a sua senha.');
+        valid = false;
+      } else if (signUpConfirmEl && confVal !== pwdVal) {
+        showFieldError(signUpConfirmEl, 'As senhas não coincidem.');
+        valid = false;
+      }
+
+      if (!valid) {
+        showNotification('Por favor, corrija os campos destacados.', 'error');
         return;
       }
 
-      const emailInput = qs('input[type="email"], input[name="email"]', signUpForm);
-      if (emailInput) {
-        const email = emailInput.value.trim();
-        if (!isEmail(email)) {
-          showNotification('Informe um e-mail válido.', 'error');
-          emailInput.style.borderColor = 'red';
-          setTimeout(() => { emailInput.style.borderColor = ''; }, 3000);
-          return;
-        }
-      }
-
-      const pwdInput = qs('input[type="password"][name="password"], input[type="password"]', signUpForm);
-      const password = pwdInput?.value || '';
-      if (password.length < 8) {
-        showNotification('A senha deve ter pelo menos 8 caracteres.', 'error');
-        pwdInput && (pwdInput.style.borderColor = 'red', setTimeout(() => { pwdInput.style.borderColor = ''; }, 3000));
-        return;
-      }
-
-      const confirmInput = qs('input[name="confirmPassword"]', signUpForm);
-      if (confirmInput && confirmInput.value !== password) {
-        showNotification('As senhas não coincidem.', 'error');
-        confirmInput.style.borderColor = 'red';
-        setTimeout(() => { confirmInput.style.borderColor = ''; }, 3000);
-        return;
-      }
-
-      const nameInput = qs('input[name="name"]', signUpForm);
-      const userName = (nameInput?.value || '').trim() || 'Usuário';
+      const userName = nameVal || (emailVal.split('@')[0]) || 'Usuário';
       saveUser('loggedInUser', userName);
 
       showNotification(`Cadastro de ${userName} realizado com sucesso!`, 'success');

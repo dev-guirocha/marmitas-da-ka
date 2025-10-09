@@ -6,8 +6,7 @@
     <title>Login / Cadastro - Marmitas da Ka</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="login-style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">    <link rel="stylesheet" href="login-style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 </head>
 
@@ -30,8 +29,10 @@
                     <input type="text" id="signUpName" name="name" placeholder="Nome" required />
                     <input type="text" id="signUpSurname" name="surname" placeholder="Apelido" required />
                     <input type="email" id="signUpEmail" name="email" placeholder="Email" required />
+                    <span class="form-error-message" id="signInEmail-error"></span>
                     <input type="tel" id="signUpPhone" name="phone" placeholder="Telemóvel" required />
                     <input type="password" id="signUpPassword" name="password" placeholder="Palavra-passe" required minlength="8" />
+                    <span class="form-error-message" id="signInPassword-error"></span>
                     <div class="password-strength">
                         <div class="strength-bar-background">
                             <div class="strength-bar"></div>
@@ -56,7 +57,9 @@
                     </div>
                     <span>ou use a sua conta</span>
                     <input type="email" id="signInEmail" name="email" placeholder="Email" required />
+                    <span class="form-error-message" id="signInEmail-error"></span>
                     <input type="password" id="signInPassword" name="password" placeholder="Palavra-passe" required />
+                    <span class="form-error-message" id="signInPassword-error"></span>
                     <div class="remember-forgot">
                         <label>
                             <input type="checkbox" name="remember"> Lembrar-me
