@@ -1,0 +1,5 @@
+# Pasta de dependências do Node.js
+/node_modules
+
+# Ficheiro de configuração do Firebase com chaves sensíveis
+/firebase-config.js

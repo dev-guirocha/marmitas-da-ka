@@ -25,7 +25,7 @@
                 <a href="../../index.html" class="mobile-only">Voltar para Home</a>
             </div>
             <div class="nav-actions">
-                <div class="user-info"><span id="user-info-name">Olá, Guirocha</span></div>
+                <div class="user-info"><span id="user-info-name">Olá, Guirocha</span><button id="logoutBtn" class="btn-logout" tittle="Sair da conta">Sair</button></div>
                 <div class="cart-info hidden" style="display: flex; align-items: center; gap: 10px;">
                     <a href="../../checkout/finalizar-pedido.html" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-shopping-cart"></i>
@@ -225,6 +225,12 @@
         </div>
     </div>
     
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script src="../../firebase-config.js"></script>
+
     <script src="dashboard-script.js"></script>
 </body>
 </html>

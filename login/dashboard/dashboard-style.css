@@ -57,6 +57,30 @@
     box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
 }
 
+/* Estilo para o botão de Logout */
+.btn-logout {
+    background: transparent;
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: all 0.2s ease;
+}
+.user-info:hover .btn-logout { /* Aparece no hover da saudação */
+    background: #fff;
+    color: var(--primary-green);
+}
+.btn-logout:hover {
+    background: var(--primary-green);
+    color: #fff;
+    border-color: var(--primary-green);
+    box-shadow: 0 2px 10px rgba(76, 175, 80, 0.25);
+}
+
 .hidden { display: none !important; }
 
 .pacote-card.personalizado {

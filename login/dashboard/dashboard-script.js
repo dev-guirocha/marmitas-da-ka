@@ -1,18 +1,48 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // --- VERIFICAÇÃO DE LOGIN (sem alterações de comportamento) ---
-  let loggedInUser = null;
-  try {
-    loggedInUser = localStorage.getItem('loggedInUser');
-  } catch (_) {}
+  // ✅ NOVA VERIFICAÇÃO DE LOGIN COM FIREBASE
+  auth.onAuthStateChanged(user => {
+    if (user) {
+        // O utilizador está autenticado, busca os dados dele no Firestore
+        console.log("Utilizador autenticado:", user.uid);
+        const userInfoSpan = document.getElementById('user-info-name');
+        
+        // Busca o nome do utilizador na base de dados
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    userInfoSpan.textContent = `Olá, ${userData.name.split(' ')[0]}`;
+                } else {
+                    // Fallback caso não encontre o documento
+                    userInfoSpan.textContent = `Olá!`;
+                }
+            })
+            .catch(error => {
+                console.error("Erro ao buscar dados do utilizador:", error);
+                userInfoSpan.textContent = `Olá!`;
+            });
 
-  const userInfoSpan = document.getElementById('user-info-name');
-  if (!loggedInUser) {
-    alert('Você precisa estar logado para acessar esta página.');
-    window.location.href = '../../login/login.html';
-    return;
-  } else {
-    if (userInfoSpan) userInfoSpan.textContent = `Olá, ${loggedInUser}`;
-  }
+    } else {
+        // O utilizador não está autenticado, redireciona para o login
+        console.log("Nenhum utilizador autenticado.");
+        alert("A sua sessão expirou ou não está autenticado. Por favor, faça login novamente.");
+        window.location.href = '../../login/login.html';
+    }
+});
+
+// ✅ LÓGICA DO BOTÃO DE LOGOUT
+const logoutBtn = document.getElementById('logoutBtn');
+logoutBtn?.addEventListener('click', () => {
+    auth.signOut().then(() => {
+        showNotification('Sessão terminada. Até breve!', 'info');
+        setTimeout(() => {
+            window.location.href = '../../login/login.html';
+        }, 1500);
+    }).catch((error) => {
+        console.error("Erro ao fazer logout:", error);
+        showNotification('Ocorreu um erro ao tentar sair.', 'error');
+    });
+});
 
   // Esconder tela de carregamento (sem alterações)
   setTimeout(() => {
