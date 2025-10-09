@@ -318,6 +318,9 @@
 }
 
 .cart-icon {
+    --cart-scale: 1;
+    transform: scale(var(--cart-scale));
+    will-change: transform;
     width: 60px;
     height: 60px;
     background: linear-gradient(135deg, var(--primary-green), #45a049);
@@ -330,12 +333,13 @@
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     position: relative;
-    transition: all 0.3s ease;
+    transition: background-color .3s ease, box-shadow .3s ease; /* em vez de 'all' */
 }
 
-.cart-icon:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+.cart-icon:hover { --cart-scale: 1.1; }
+
+.cart-icon.shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
 }
 
 .cart-badge {
@@ -405,6 +409,33 @@
     border-top: 2px solid #eee;
 }
 
+.btn-clear-cart {
+    background: #fff;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .btn-clear-cart:hover {
+    background: #e74c3c;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(231, 76, 60, 0.25);
+  }
+  
+  .credits-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    background: rgba(46, 204, 113, 0.12);
+    color: #2ecc71;
+    font-weight: 700;
+  }
+  
 .btn-small {
     padding: 8px 16px;
     font-size: 0.9rem;
@@ -640,4 +671,17 @@
     .navbar .user-info {
         display: none;
     }
+}
+
+@keyframes shake {
+    10%, 90%   { transform: translate3d(-1px, 0, 0) scale(var(--cart-scale)); }
+    20%, 80%   { transform: translate3d( 2px, 0, 0) scale(var(--cart-scale)); }
+    30%, 50%, 70% { transform: translate3d(-3px, 0, 0) scale(var(--cart-scale)); }
+    40%, 60%   { transform: translate3d( 3px, 0, 0) scale(var(--cart-scale)); }
+}
+
+/* acessibilidade: desliga animação para quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+    .cart-icon.shake { animation: none; }
+    .menu-item { animation: none; transform: none; opacity: 1; }
 }
