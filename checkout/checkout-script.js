@@ -2,14 +2,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== Config =====
   const PATH_DASHBOARD = '../login/dashboard/dashboard.html';
 
-  // ===== Endereço (persistência) =====
+  // ===== Endereço (persistência) - ATUALIZADO =====
   const ADDRESS_KEY = 'mdk_address_v1';
   const addressFields = {
     cep: document.getElementById('cep'),
     endereco: document.getElementById('endereco'),
     numero: document.getElementById('numero'),
     bairro: document.getElementById('bairro'),
-    deliveryTime: document.getElementById('delivery-time-select')
+    deliveryTime: document.getElementById('delivery-time-select'),
+    saveAddressCheck: document.getElementById('save-address') // ✅ NOVO
   };
 
   function loadSavedAddress() {
@@ -18,21 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!raw) return;
     try {
       const data = JSON.parse(raw);
-      if (data.cep && addressFields.cep) addressFields.cep.value = data.cep;
-      if (data.endereco && addressFields.endereco) addressFields.endereco.value = data.endereco;
-      if (data.numero && addressFields.numero) addressFields.numero.value = data.numero;
-      if (data.bairro && addressFields.bairro) addressFields.bairro.value = data.bairro;
-      if (data.deliveryTime && addressFields.deliveryTime) addressFields.deliveryTime.value = data.deliveryTime;
+      // ✅ NOVO: Só preenche se a opção 'save' estava ativa
+      if (data.savePreference) {
+        if (data.cep && addressFields.cep) addressFields.cep.value = data.cep;
+        if (data.endereco && addressFields.endereco) addressFields.endereco.value = data.endereco;
+        if (data.numero && addressFields.numero) addressFields.numero.value = data.numero;
+        if (data.bairro && addressFields.bairro) addressFields.bairro.value = data.bairro;
+        if (data.deliveryTime && addressFields.deliveryTime) addressFields.deliveryTime.value = data.deliveryTime;
+        if (addressFields.saveAddressCheck) addressFields.saveAddressCheck.checked = true;
+      }
     } catch (_) {}
   }
 
   function saveAddress() {
+    // ✅ NOVO: Só guarda se a checkbox estiver marcada
+    if (!addressFields.saveAddressCheck?.checked) {
+        try { localStorage.removeItem(ADDRESS_KEY); } catch (_) {}
+        return;
+    }
+
     const payload = {
       cep: addressFields.cep?.value || '',
       endereco: addressFields.endereco?.value || '',
       numero: addressFields.numero?.value || '',
       bairro: addressFields.bairro?.value || '',
-      deliveryTime: addressFields.deliveryTime?.value || ''
+      deliveryTime: addressFields.deliveryTime?.value || '',
+      savePreference: addressFields.saveAddressCheck?.checked || false // ✅ NOVO
     };
     try { localStorage.setItem(ADDRESS_KEY, JSON.stringify(payload)); } catch (_) {}
   }
@@ -40,10 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // chama no boot para autopreencher
   loadSavedAddress();
 
-  // salve automaticamente sempre que o usuário mexer (uma única vez)
+  // salve automaticamente sempre que o utilizador mexer
   Object.values(addressFields).forEach(el => {
     el?.addEventListener('change', saveAddress);
-    el?.addEventListener('blur', saveAddress);
   });
 
   // ===== Utils =====
@@ -238,55 +249,66 @@ document.addEventListener('DOMContentLoaded', () => {
   goToCartBtn?.addEventListener('click', () => container?.classList.remove('right-panel-active'));
 
   // ===== CEP / ViaCEP =====
-  const clearAddressForm = () => {
-    if (enderecoInput) enderecoInput.value = '';
-    if (bairroInput)   bairroInput.value   = '';
-  };
+const clearAddressForm = () => {
+  if (enderecoInput) enderecoInput.value = '';
+  if (bairroInput)   bairroInput.value   = '';
+};
 
-  // Máscara do CEP
-  cepInput?.addEventListener('input', (e) => {
-    let value = e.target.value.replace(/\D/g, '').slice(0, 8);
-    if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
-    e.target.value = value;
-  });
+// referência do spinner
+const spinner = qs('#cep-spinner');
 
-  let cepController = null;
+// Máscara do CEP
+cepInput?.addEventListener('input', (e) => {
+  let value = e.target.value.replace(/\D/g, '').slice(0, 8);
+  if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+  e.target.value = value;
+});
 
-  cepInput?.addEventListener('blur', async (e) => {
-    const cep = e.target.value.replace(/\D/g, '');
-    if (!isCEP(cep)) { clearAddressForm(); return; }
+let cepController = null;
 
-    if (enderecoInput) enderecoInput.value = 'Buscando...';
-    if (bairroInput)   bairroInput.value   = 'Buscando...';
+cepInput?.addEventListener('blur', async (e) => {
+  const cep = e.target.value.replace(/\D/g, '');
+  if (!isCEP(cep)) { 
+    clearAddressForm(); 
+    spinner?.classList.add('hidden'); 
+    return; 
+  }
 
-    // cancela requisição anterior
-    if (cepController) cepController.abort();
-    cepController = new AbortController();
+  if (enderecoInput) enderecoInput.value = 'Buscando...';
+  if (bairroInput)   bairroInput.value   = 'Buscando...';
 
-    try {
-      const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: cepController.signal });
-      const data = await resp.json();
+  // cancela requisição anterior
+  if (cepController) cepController.abort();
+  cepController = new AbortController();
 
-      if (!data || data.erro) {
-        clearAddressForm();
-        showNotification('CEP não encontrado. Por favor, verifique.', 'error');
-        return;
-      }
+  // mostra spinner
+  spinner?.classList.remove('hidden');
 
-      if (enderecoInput) enderecoInput.value = data.logradouro || '';
-      if (bairroInput)   bairroInput.value   = data.bairro || '';
-      showNotification('Endereço preenchido!', 'success');
-      numeroInput?.focus();
-    } catch (err) {
-      if (err.name === 'AbortError') return; // usuário digitou/outro blur
+  try {
+    const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: cepController.signal });
+    const data = await resp.json();
+
+    if (!data || data.erro) {
       clearAddressForm();
-      showNotification('Não foi possível buscar o CEP. Tente novamente.', 'error');
-      console.error('Erro ao buscar CEP:', err);
-    } finally {
-      cepController = null;
+      showNotification('CEP não encontrado. Por favor, verifique.', 'error');
+      return;
     }
-  });
 
+    if (enderecoInput) enderecoInput.value = data.logradouro || '';
+    if (bairroInput)   bairroInput.value   = data.bairro || '';
+    showNotification('Endereço preenchido!', 'success');
+    numeroInput?.focus();
+  } catch (err) {
+    if (err.name === 'AbortError') return; // usuário digitou / outro blur
+    clearAddressForm();
+    showNotification('Não foi possível buscar o CEP. Tente novamente.', 'error');
+    console.error('Erro ao buscar CEP:', err);
+  } finally {
+    // esconde spinner e limpa controller
+    spinner?.classList.add('hidden');
+    cepController = null;
+  }
+});
   // ===== Formulário de entrega =====
   deliveryForm?.addEventListener('submit', (e) => {
     e.preventDefault();

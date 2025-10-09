@@ -57,71 +57,65 @@ document.addEventListener('DOMContentLoaded', function () {
     const cartInfoDiv = document.querySelector('.cart-info');
     const cartCountSpan = document.getElementById('cart-count');
     const cartTotalSpan = document.getElementById('cart-total');
-    const clearCartBtn = document.getElementById('clearCartBtn');
-    const creditsBadge = document.getElementById('credits-badge');
+    const clearCartBtn   = document.getElementById('clearCartBtn');
+    const modal          = document.getElementById('clearCartModal');
+    const closeModalBtn  = document.getElementById('closeModalBtn');
+    const modalOptions   = document.querySelector('.modal-options');
 
+    const openModal  = () => modal?.classList.remove('hidden');
+    const closeModal = () => modal?.classList.add('hidden');
 
     clearCartBtn?.addEventListener('click', () => {
-        const hasPackage = !!cart.packageName;
-        const hasItems = !!(cart.items && cart.items.length);
-        if (!hasPackage && !hasItems) return;
-      
-        // Escolha do usuário:
-        // 1 = itens, 2 = pacote, 3 = tudo
-        let mode = '3';
-        if (hasPackage && hasItems) {
-          const ans = prompt(
-            'O que deseja limpar?\n1 - Apenas itens selecionados\n2 - Apenas o pacote\n3 - Tudo',
-            '3'
-          );
-          if (!ans) return;
-          mode = ans.trim();
-        } else if (hasItems) {
-          mode = '1';
-        } else if (hasPackage) {
-          mode = '2';
-        }
-      
-        if (mode === '1') {
-          // Limpar apenas os itens: restaura créditos do pacote
-          cart.items = [];
-          cart.mealCredits = Number(cart.packageCredits || 0);
-          showNotification('Itens removidos. Créditos restaurados.', 'success');
-        } else if (mode === '2') {
-          // Remover apenas o pacote: zera tudo que depende dele
-          cart.packageName = null;
-          cart.packagePrice = 0;
-          cart.totalPrice = 0;
-          cart.mealCredits = 0;
-          cart.packageCredits = 0;
-          cart.items = []; // não faz sentido manter itens sem pacote
-          showNotification('Pacote removido.', 'success');
-        } else if (mode === '3') {
-          // Limpar tudo
-          cart = {
-            packageName: null,
-            packagePrice: 0,
-            totalPrice: 0,
-            mealCredits: 0,
-            packageCredits: 0,
-            items: [],
-          };
-          showNotification('Carrinho esvaziado.', 'success');
+      const hasPackage = !!cart.packageName;
+      const hasItems   = !!(cart.items && cart.items.length > 0);
+      if (!hasPackage && !hasItems) {
+        showNotification('O carrinho já está vazio.', 'info');
+        return;
+      }
+      openModal();
+    });
+
+    closeModalBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    modalOptions?.addEventListener('click', (e) => {
+      const button = e.target.closest('button');
+      if (!button) return;
+
+      const mode = button.dataset.mode;
+
+      if (mode === '1') {
+        cart.items = [];
+        cart.mealCredits = Number(cart.packageCredits || 0);
+        showNotification('Itens removidos. Créditos restaurados.', 'success');
+      } else if (mode === '2') {
+        cart.packageName   = null;
+        cart.packagePrice  = 0;
+        cart.totalPrice    = 0;
+        cart.mealCredits   = 0;
+        cart.packageCredits= 0;
+        cart.items         = [];
+        showNotification('Pacote removido.', 'success');
+      } else if (mode === '3') {
+        cart = { packageName: null, packagePrice: 0, totalPrice: 0, mealCredits: 0, packageCredits: 0, items: [] };
+        showNotification('Carrinho esvaziado.', 'success');
+      } else {
+        return;
+      }
+
+      try {
+        if (!cart.packageName) {
+          localStorage.removeItem('marmitasCart');
         } else {
-          return; // entrada inválida: não faz nada
+          localStorage.setItem('marmitasCart', JSON.stringify(cart));
         }
-      
-        // Persistência
-        try {
-          if (!cart.packageName) {
-            localStorage.removeItem('marmitasCart');
-          } else {
-            localStorage.setItem('marmitasCart', JSON.stringify(cart));
-          }
-        } catch (_) {}
-      
-        updateCartDisplay();
-      });
+      } catch (_) {}
+
+      updateCartDisplay();
+      closeModal();
+    });
 
     // Alterado: usamos o container pai opcionalmente, com guarda
     const floatingCart = document.getElementById('floatingCart');
@@ -470,4 +464,51 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => notification.remove(), 300);
       }, 3000);
     }
+    // ✅ NOVO: Sincronização entre Abas com StorageEvent
+window.addEventListener('storage', (e) => {
+  if (e.key !== 'marmitasCart') return; // só nos interessa o carrinho
+  console.log('Sincronizando carrinho a partir de outra aba...');
+
+  // Estado base (fallback)
+  let next = { packageName: null, packagePrice: 0, totalPrice: 0, mealCredits: 0, packageCredits: 0, items: [] };
+
+  try {
+    if (e.newValue) {
+      const parsed = JSON.parse(e.newValue);
+
+      if (parsed && typeof parsed === 'object') {
+        next.packageName  = parsed?.packageName ?? null;
+        next.packagePrice = Number.isFinite(+parsed?.packagePrice) ? +parsed.packagePrice : 0;
+        next.items        = Array.isArray(parsed?.items) ? parsed.items : [];
+        next.mealCredits  = Number.isFinite(+parsed?.mealCredits) ? +parsed.mealCredits : 0;
+
+        // totalPrice: se não vier válido, cai para packagePrice
+        next.totalPrice   = Number.isFinite(+parsed?.totalPrice)
+          ? +parsed.totalPrice
+          : (Number.isFinite(+parsed?.packagePrice) ? +parsed.packagePrice : 0);
+
+        // packageCredits: usa o salvo; se ausente e houver pacote, infere (credits restantes + selecionados)
+        if (Number.isFinite(+parsed?.packageCredits)) {
+          next.packageCredits = +parsed.packageCredits;
+        } else if (next.packageName) {
+          const sumQty = next.items.reduce((acc, it) => acc + Number(it?.quantity || 0), 0);
+          next.packageCredits = Math.max(0, next.mealCredits + sumQty);
+        } else {
+          next.packageCredits = 0;
+        }
+      }
+    } else {
+      // e.newValue === null -> carrinho foi limpo na outra aba
+      next = { packageName: null, packagePrice: 0, totalPrice: 0, mealCredits: 0, packageCredits: 0, items: [] };
+    }
+  } catch (err) {
+    console.error('Erro ao analisar dados do carrinho sincronizado:', err);
+    // mantém o fallback `next` zerado
+  }
+
+  // aplica e atualiza UI
+  cart = next;
+  updateCartDisplay();
+  showNotification('Seu carrinho foi atualizado por outra aba.', 'info');
+});
   });

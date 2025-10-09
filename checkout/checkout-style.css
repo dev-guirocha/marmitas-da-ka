@@ -218,3 +218,28 @@ button.ghost:hover { background-color: #FFFFFF; color: var(--primary-green); }
     .form-row { flex-direction: column; gap: 0; }
     .payment-options { grid-template-columns: 1fr; }
 }
+
+/* --- NOVO: Estilos do Spinner do CEP --- */
+.spinner {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: var(--primary-green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.spinner.hidden {
+    display: none;
+}
+
+/* A animação 'spin' */
+@keyframes spin {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}

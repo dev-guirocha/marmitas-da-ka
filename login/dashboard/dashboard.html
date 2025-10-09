@@ -211,6 +211,19 @@
         <p>&copy; 2025 Marmitas da Ka. Todos os direitos reservados.</p>
     </footer>
 
+    <div id="clearCartModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Esvaziar Carrinho</h2>
+            <p>O que deseja limpar?</p>
+            <div class="modal-options">
+                <button data-mode="1" class="btn btn-secondary">Apenas Itens</button>
+                <button data-mode="2" class="btn btn-secondary">Apenas o Pacote</button>
+                <button data-mode="3" class="btn btn-primary">Limpar Tudo</button>
+            </div>
+            <button id="closeModalBtn" class="modal-close-btn">&times;</button>
+        </div>
+    </div>
+    
     <script src="dashboard-script.js"></script>
 </body>
 </html>

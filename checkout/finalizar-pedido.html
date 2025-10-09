@@ -70,7 +70,10 @@
                         <div class="delivery-notice">
                             <p>Entregas apenas em <strong>Aracaju, SE</strong>.</p>
                         </div>
-                        <input type="tel" id="cep" placeholder="CEP" required maxlength="9">
+                        <div style="position: relative;">
+                            <input type="tel" id="cep" placeholder="CEP" required maxlength="9">
+                            <div id="cep-spinner" class="spinner hidden"></div>
+                        </div>
                         <input type="text" id="endereco" placeholder="Endereço (Rua, Av.)" required>
                         <div class="form-row">
                             <input type="text" id="numero" placeholder="Número" required>
@@ -78,6 +81,11 @@
                         </div>
                         <input type="text" id="complemento" placeholder="Complemento (Apto, Bloco, etc.)">
                         <textarea id="referencia" placeholder="Ponto de Referência" rows="2"></textarea>
+                        
+                        <div class="form-row" style="align-items: center; margin-bottom: 15px;">
+                            <input type="checkbox" id="save-address" name="save-address" style="width: auto;">
+                            <label for="save-address" style="margin-bottom: 0;">Guardar endereço para a próxima compra</label>
+                        </div>
                         
                         <div class="delivery-time">
                             <h3>Horário de Entrega</h3>
