@@ -266,6 +266,7 @@ h2::after {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    gap: 8px;
 }
 
 .btn:hover {

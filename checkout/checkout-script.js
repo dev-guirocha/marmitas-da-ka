@@ -1,6 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
   // ===== Config =====
   const PATH_DASHBOARD = '../login/dashboard/dashboard.html';
+  const PATH_LOGIN = '../login/login.html';
+  const WHATSAPP_NUMBER = '5579991428025';
+  const PAYMENT_LABELS = { pix: 'PIX', cash: 'Dinheiro' };
+  const DELIVERY_LABELS = {
+    manha: 'Manhã (08h às 12h)',
+    tarde: 'Tarde (13h às 18h)',
+    noite: 'Noite (18h às 22h)',
+  };
+
+  let currentUser = null;
+  let customerProfile = {};
+  let userProfileLoaded = false;
 
   // ===== Endereço (persistência) - ATUALIZADO =====
   const ADDRESS_KEY = 'mdk_address_v1';
@@ -9,8 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     endereco: document.getElementById('endereco'),
     numero: document.getElementById('numero'),
     bairro: document.getElementById('bairro'),
+    complemento: document.getElementById('complemento'),
     deliveryTime: document.getElementById('delivery-time-select'),
-    saveAddressCheck: document.getElementById('save-address') // ✅ NOVO
+    saveAddressCheck: document.getElementById('save-address'), // ✅ NOVO
   };
 
   function loadSavedAddress() {
@@ -25,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.endereco && addressFields.endereco) addressFields.endereco.value = data.endereco;
         if (data.numero && addressFields.numero) addressFields.numero.value = data.numero;
         if (data.bairro && addressFields.bairro) addressFields.bairro.value = data.bairro;
+        if (data.complemento && addressFields.complemento) addressFields.complemento.value = data.complemento;
         if (data.deliveryTime && addressFields.deliveryTime) addressFields.deliveryTime.value = data.deliveryTime;
         if (addressFields.saveAddressCheck) addressFields.saveAddressCheck.checked = true;
       }
@@ -43,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       endereco: addressFields.endereco?.value || '',
       numero: addressFields.numero?.value || '',
       bairro: addressFields.bairro?.value || '',
+      complemento: addressFields.complemento?.value || '',
       deliveryTime: addressFields.deliveryTime?.value || '',
       savePreference: addressFields.saveAddressCheck?.checked || false // ✅ NOVO
     };
@@ -127,6 +142,68 @@ document.addEventListener('DOMContentLoaded', () => {
   const enderecoInput     = qs('#endereco');
   const bairroInput       = qs('#bairro');
   const numeroInput       = qs('#numero');
+  const complementoInput  = qs('#complemento');
+
+  const getSelectedPaymentMethod = () => {
+    const selected = document.querySelector('input[name="payment"]:checked');
+    return selected?.value || 'pix';
+  };
+
+  const getDeliverySlotLabel = (slot) => DELIVERY_LABELS[slot] || 'A combinar';
+
+  const getNextMondayDate = () => {
+    const base = new Date();
+    base.setHours(0, 0, 0, 0);
+    const day = base.getDay(); // 0=domingo, 1=segunda
+    let offset = (8 - day) % 7; // próxima segunda
+    if (offset === 0) offset = 7;
+    base.setDate(base.getDate() + offset);
+    return base.toLocaleDateString('pt-BR');
+  };
+
+  const ensureAuthSession = () => {
+    if (typeof auth === 'undefined' || !auth?.onAuthStateChanged) {
+      userProfileLoaded = true;
+      return;
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        showNotification('Sua sessão expirou. Faça login novamente.', 'error');
+        setTimeout(() => { window.location.href = PATH_LOGIN; }, 1800);
+        return;
+      }
+
+      currentUser = user;
+      const baseProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        name: user.displayName || '',
+      };
+
+      customerProfile = { ...baseProfile };
+      userProfileLoaded = true;
+
+      if (typeof db === 'undefined' || !db?.collection) return;
+
+      try {
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          const data = doc.data() || {};
+          customerProfile = {
+            ...baseProfile,
+            ...data,
+            email: data.email || baseProfile.email,
+            phone: data.phone || baseProfile.phone,
+            name: data.name || baseProfile.name,
+          };
+        }
+      } catch (err) {
+        console.warn('Não foi possível carregar os dados do utilizador:', err);
+      }
+    });
+  };
 
   // ===== Carrinho =====
   let cart = {};
@@ -338,9 +415,21 @@ cepInput?.addEventListener('blur', async (e) => {
       return;
     }
 
+    if (typeof auth !== 'undefined' && auth?.onAuthStateChanged && !currentUser) {
+      showNotification('Estamos carregando sua sessão. Tente novamente em instantes.', 'error');
+      return;
+    }
+
     // --- NOVO: LÓGICA PARA GUARDAR O PEDIDO ---
     // Snapshot do carrinho para não sofrer mutações futuras
     const cartSnapshot = JSON.parse(JSON.stringify(cart));
+
+    const paymentMethod = getSelectedPaymentMethod();
+    const paymentLabel = PAYMENT_LABELS[paymentMethod] || paymentMethod.toUpperCase();
+
+    const deliverySlotValue = document.getElementById('delivery-time-select')?.value || '';
+    const deliverySlotLabel = getDeliverySlotLabel(deliverySlotValue);
+    const nextDeliveryDate = getNextMondayDate();
 
     // Snapshot do endereço selecionado
     const orderAddress = {
@@ -348,8 +437,46 @@ cepInput?.addEventListener('blur', async (e) => {
       endereco: document.getElementById('endereco')?.value || '',
       numero: document.getElementById('numero')?.value || '',
       bairro: document.getElementById('bairro')?.value || '',
-      deliveryTime: document.getElementById('delivery-time-select')?.value || '',
+      complemento: complementoInput?.value || '',
+      deliveryTime: deliverySlotValue,
+      deliveryTimeLabel: deliverySlotLabel,
     };
+
+    const customerNameFull = (customerProfile.name || currentUser?.displayName || '').trim() || 'Cliente';
+    const customerEmail = (customerProfile.email || currentUser?.email || '').trim();
+    const customerPhone = (customerProfile.phone || currentUser?.phoneNumber || '').trim();
+
+    const itemsLines = (cartSnapshot.items || []).length
+      ? cartSnapshot.items.map((item) => `- ${Number(item.quantity || 0)}x ${item.name}`)
+      : ['- Montagem pendente (nenhuma marmita adicionada)'];
+
+    const addressLine = `${orderAddress.endereco}, ${orderAddress.numero} - ${orderAddress.bairro} - CEP ${orderAddress.cep}`;
+    const whatsappLines = [
+      `Olá, ${customerNameFull}, segue a confirmação do seu pedido:`,
+      '',
+      `${cartSnapshot.packageName || 'Pacote selecionado'}:`,
+      ...itemsLines,
+      '',
+      `Endereço de entrega: ${addressLine}`,
+    ];
+
+    if (orderAddress.complemento) {
+      whatsappLines.push(`Complemento: ${orderAddress.complemento}`);
+    }
+
+    whatsappLines.push(`Horário escolhido: ${deliverySlotLabel}`);
+    whatsappLines.push(`Data de entrega das marmitas: ${nextDeliveryDate} (segunda-feira subsequente)`);
+    whatsappLines.push('');
+    whatsappLines.push(`Pagamento: ${paymentLabel}`);
+    whatsappLines.push(`Valor total: ${formatBRL(cartSnapshot.totalPrice)}`);
+    whatsappLines.push('Status: Aguardando pagamento');
+    whatsappLines.push('');
+    whatsappLines.push('Contato do cliente:');
+    whatsappLines.push(`- Nome: ${customerNameFull}`);
+    if (customerEmail) whatsappLines.push(`- Email: ${customerEmail}`);
+    if (customerPhone) whatsappLines.push(`- Telefone: ${customerPhone}`);
+
+    const whatsappMessage = whatsappLines.join('\n');
 
     // Objeto do pedido
     const now = new Date();
@@ -367,6 +494,23 @@ cepInput?.addEventListener('blur', async (e) => {
         items: Array.isArray(cartSnapshot.items) ? cartSnapshot.items : [],
       },
       address: orderAddress,
+      paymentStatus: 'pending',
+      payment: {
+        method: paymentMethod,
+        label: paymentLabel,
+      },
+      customer: {
+        uid: currentUser?.uid || null,
+        name: customerNameFull,
+        email: customerEmail,
+        phone: customerPhone,
+      },
+      delivery: {
+        slot: deliverySlotValue,
+        slotLabel: deliverySlotLabel,
+        scheduledDate: nextDeliveryDate,
+      },
+      whatsappMessage,
     };
 
     // Persiste em marmitasOrders
@@ -376,19 +520,41 @@ cepInput?.addEventListener('blur', async (e) => {
       orders.push(newOrder);
       localStorage.setItem('marmitasOrders', JSON.stringify(orders));
     } catch (_) {
-      // Se falhar, ainda assim seguimos com o fluxo
       console.warn('Não foi possível salvar o pedido em marmitasOrders.');
     }
 
-    showNotification('Processando seu pedido...', 'success');
+    if (typeof db !== 'undefined' && db?.collection) {
+      const orderDoc = db.collection('orders').doc(String(newOrder.id));
+      const payload = {
+        ...newOrder,
+        createdAtServer: typeof firebase !== 'undefined' && firebase?.firestore
+          ? firebase.firestore.FieldValue.serverTimestamp()
+          : null,
+      };
+
+      orderDoc
+        .set(payload, { merge: true })
+        .catch((err) => console.error('Falha ao gravar pedido no Firestore:', err));
+    }
+
+    showNotification('Estamos abrindo o WhatsApp com a confirmação do pedido.', 'success');
+    saveAddress(); // garante persistência da última edição
+
+    const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+    const windowRef = window.open(whatsappURL, '_blank', 'noopener');
+    if (!windowRef) {
+      window.location.href = whatsappURL;
+    }
+
+    try { localStorage.removeItem('marmitasCart'); } catch (_) {}
 
     setTimeout(() => {
-      alert('Pedido finalizado com sucesso! Entraremos em contato para confirmar a entrega e o pagamento.');
-      try { localStorage.removeItem('marmitasCart'); } catch {}
-      saveAddress(); // garante persistência da última edição
       window.location.href = PATH_DASHBOARD;
-    }, 2000);
+    }, 2500);
   });
+
+  // ===== Sessão / Perfil =====
+  ensureAuthSession();
 
   // ===== Boot =====
   loadCart();

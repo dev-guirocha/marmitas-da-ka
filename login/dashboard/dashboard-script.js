@@ -12,14 +12,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (doc.exists) {
                     const userData = doc.data();
                     userInfoSpan.textContent = `Olá, ${userData.name.split(' ')[0]}`;
+                    if (userData.role === 'admin') {
+                        adminLink?.classList.remove('hidden');
+                    } else {
+                        adminLink?.classList.add('hidden');
+                    }
                 } else {
                     // Fallback caso não encontre o documento
                     userInfoSpan.textContent = `Olá!`;
+                    adminLink?.classList.add('hidden');
                 }
             })
             .catch(error => {
                 console.error("Erro ao buscar dados do utilizador:", error);
                 userInfoSpan.textContent = `Olá!`;
+                adminLink?.classList.add('hidden');
             });
 
     } else {
@@ -166,7 +173,186 @@ logoutBtn?.addEventListener('click', () => {
   const cartStatus = document.getElementById('cartStatus');
   const cartPreview = document.querySelector('.cart-preview');
   const orderItemsContainer = document.getElementById('order-items');
-  const menuItems = document.querySelectorAll('.menu-item');
+  const menuSlider = document.querySelector('.menu-slider');
+  const adminLink = document.getElementById('adminLink');
+  const upgradeModal = document.getElementById('upgradeModal');
+  const upgradeMessageEl = document.getElementById('upgradeMessage');
+  const upgradeAcceptBtn = document.getElementById('upgradeAcceptBtn');
+  const upgradeDeclineBtn = document.getElementById('upgradeDeclineBtn');
+  const upgradeCloseBtn = document.getElementById('upgradeCloseBtn');
+
+  let pendingUpgrade = null;
+
+  adminLink?.classList.add('hidden');
+
+  orderItemsContainer?.addEventListener('click', (event) => {
+    const button = event.target.closest('.remove-order-item');
+    if (!button) return;
+
+    const index = Number(button.dataset.index);
+    if (!Number.isFinite(index) || index < 0) return;
+
+    const removed = cart.items[index];
+    if (!removed) return;
+
+    const creditsToRestore = Math.max(0, Number(removed.quantity || 0));
+    cart.items.splice(index, 1);
+
+    const maxCredits = Number(cart.packageCredits || 0);
+    const nextCredits = Number(cart.mealCredits || 0) + creditsToRestore;
+    cart.mealCredits = Math.min(maxCredits || nextCredits, nextCredits);
+
+    updateCartDisplay();
+    showNotification(`${removed.name} removida do pedido.`, 'info');
+  });
+
+  function attachMenuItemBehavior(item) {
+    if (!item || item.dataset.initialized === 'true') return;
+
+    const name = item.dataset.name;
+    if (!name) return;
+
+    const plusBtn = item.querySelector('.plus');
+    const minusBtn = item.querySelector('.minus');
+
+    plusBtn?.addEventListener('click', () => {
+      if (!cart.packageName) {
+        showNotification('Por favor, selecione um pacote para começar.', 'error');
+        document.querySelector('#pacotes')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      if (cart.mealCredits <= 0) {
+        showNotification('Você não tem créditos suficientes!', 'error');
+        return;
+      }
+
+      cart.mealCredits = Math.max(0, Number(cart.mealCredits) - 1);
+      const existingItem = cart.items.find((cartItem) => cartItem.name === name);
+
+      if (existingItem) {
+        existingItem.quantity = Number(existingItem.quantity || 0) + 1;
+      } else {
+        cart.items.push({ name, quantity: 1 });
+      }
+
+      updateCartDisplay();
+      triggerCartAnimation();
+    });
+
+    minusBtn?.addEventListener('click', () => {
+      const existingItem = cart.items.find((cartItem) => cartItem.name === name);
+      if (existingItem && Number(existingItem.quantity) > 0) {
+        existingItem.quantity = Number(existingItem.quantity) - 1;
+        cart.mealCredits = Number(cart.mealCredits) + 1;
+
+        if (existingItem.quantity === 0) {
+          cart.items = cart.items.filter((cartItem) => cartItem.name !== name);
+        }
+
+        updateCartDisplay();
+      }
+    });
+
+    item.dataset.initialized = 'true';
+  }
+
+  function initializeMenuItems() {
+    document.querySelectorAll('.menu-item').forEach(attachMenuItemBehavior);
+  }
+
+  function clearDynamicMenuItems() {
+    menuSlider?.querySelectorAll('.menu-item[data-source="dynamic"]').forEach((el) => el.remove());
+  }
+
+  function createMenuItemCard(item) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'menu-item';
+    wrapper.dataset.name = item?.name || '';
+    wrapper.dataset.source = 'dynamic';
+
+    const imageUrl = item?.imageUrl || 'https://via.placeholder.com/320x200?text=Marmita';
+    const description = item?.description || 'Delícia saudável da semana.';
+
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = item?.name || 'Item do cardápio';
+
+    const title = document.createElement('h3');
+    title.textContent = item?.name || 'Novo prato';
+
+    const desc = document.createElement('p');
+    desc.className = 'item-description';
+    desc.textContent = description;
+
+    const footer = document.createElement('div');
+    footer.className = 'item-footer';
+
+    const qtyWrapper = document.createElement('div');
+    qtyWrapper.className = 'quantity-selector';
+
+    const minusBtn = document.createElement('button');
+    minusBtn.className = 'btn-qty minus';
+    minusBtn.type = 'button';
+    minusBtn.setAttribute('aria-label', 'Remover um');
+    minusBtn.textContent = '-';
+
+    const quantity = document.createElement('span');
+    quantity.className = 'quantity';
+    quantity.textContent = '0';
+
+    const plusBtn = document.createElement('button');
+    plusBtn.className = 'btn-qty plus';
+    plusBtn.type = 'button';
+    plusBtn.setAttribute('aria-label', 'Adicionar um');
+    plusBtn.textContent = '+';
+
+    qtyWrapper.appendChild(minusBtn);
+    qtyWrapper.appendChild(quantity);
+    qtyWrapper.appendChild(plusBtn);
+    footer.appendChild(qtyWrapper);
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(title);
+    wrapper.appendChild(desc);
+    wrapper.appendChild(footer);
+
+    return wrapper;
+  }
+
+  function loadDynamicMenuItems() {
+    if (!menuSlider || typeof db === 'undefined' || !db?.collection) {
+      return Promise.resolve();
+    }
+
+    clearDynamicMenuItems();
+
+    return db
+      .collection('menuItems')
+      .orderBy('name')
+      .get()
+      .then((snapshot) => {
+        if (snapshot.empty) return;
+        const fragment = document.createDocumentFragment();
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (!data || !data.name || data.isActive === false) return;
+
+          const card = createMenuItemCard({ id: doc.id, ...data });
+          fragment.appendChild(card);
+        });
+
+        if (fragment.childNodes.length) {
+          menuSlider?.appendChild(fragment);
+          initializeMenuItems();
+          updateMenuItemQuantities();
+        }
+      })
+      .catch((err) => {
+        console.error('Erro ao carregar cardápio dinâmico:', err);
+      });
+  }
 
   // --- FUNÇÃO ATUALIZADA: triggerCartAnimation ---
   function triggerCartAnimation() {
@@ -208,7 +394,7 @@ logoutBtn?.addEventListener('click', () => {
   }
 
   function updateMenuItemQuantities() {
-    menuItems.forEach((menuItem) => {
+    document.querySelectorAll('.menu-item').forEach((menuItem) => {
       const name = menuItem.dataset.name;
       const quantitySpan = menuItem.querySelector('.quantity');
       const itemInCart = cart.items.find((i) => i.name === name);
@@ -326,127 +512,118 @@ logoutBtn?.addEventListener('click', () => {
   }
 
   // --- LÓGICA ATUALIZADA: Botões de Pacote ---
-  const packageButtons = document.querySelectorAll('.add-package-to-cart');
-  packageButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const price = parseFloat(button.dataset.price);
-      const name = button.dataset.name;
-      const credits = parseInt(button.dataset.credits, 10);
+  const packageButtons = Array.from(document.querySelectorAll('.add-package-to-cart'));
 
-      // sanity checks
-      const validPrice = Number.isFinite(price) ? price : 0;
-      const validCredits = Number.isFinite(credits) ? credits : 0;
+  const upgradeMap = {
+    'Plano Praticidade': [
+      { name: 'Plano Constância', credits: 10 },
+      { name: 'Plano Equilíbrio', credits: 20 },
+    ],
+  };
 
-      if (cart.packageName && cart.packageName !== name) {
-        const userConfirmed = confirm(
-          'Você já tem um pacote no carrinho. Deseja substituí-lo? Todo o seu progresso no pacote atual será perdido.'
-        );
-        if (!userConfirmed) return;
-      }
-
-      cart = {
-        packageName: name || null,
-        packagePrice: validPrice,
-        totalPrice: validPrice,
-        mealCredits: validCredits,
-        packageCredits: validCredits,
-        items: [],
-      };
-
-      // UI: feedback visual de seleção do pacote
-      document.querySelectorAll('.pacote-card').forEach((card) => card.classList.remove('selected'));
-      const grid = button.closest('.pacotes-grid');
-      grid?.classList.add('has-selection');
-      const selectedCard = button.closest('.pacote-card');
-      selectedCard?.classList.add('selected');
-
-      updateCartDisplay();
-      showNotification(`"${name}" selecionado! Você tem ${validCredits} créditos.`, 'success');
-      document.querySelector('#cardapio')?.scrollIntoView({ behavior: 'smooth' });
-      triggerCartAnimation(); // feedback também ao selecionar pacote
-    });
-  });
-
-  // --- NOVO: LÓGICA PARA ADICIONAR PACOTE PRÉ-SELECIONADO ---
-  (function applyPreselectedPackage() {
-    const raw = localStorage.getItem('selectedPackage');
-    const key = (raw || '').toLowerCase().trim();
-    if (!key) return;
-
-    // não sobrescreve carrinho existente
-    if (cart && cart.packageName) {
-      localStorage.removeItem('selectedPackage');
+  function showUpgradeSuggestion(currentName) {
+    const suggestions = upgradeMap[currentName];
+    if (!suggestions || !suggestions.length) {
+      showNotification('Você já selecionou este plano. Se quiser trocar, escolha outro pacote.', 'info');
       return;
     }
 
-    // tenta casar por data-name contendo "Semanal", "Quinzenal" ou "Mensal"
-    const label = key.charAt(0).toUpperCase() + key.slice(1); // semanal -> Semanal
-    let btn = document.querySelector(`.add-package-to-cart[data-name*="${label}"]`);
+    const [primarySuggestion, secondarySuggestion] = suggestions;
+    const secondaryText = secondarySuggestion
+      ? `<br>Outra possibilidade é o <strong>${secondarySuggestion.name}</strong> (${secondarySuggestion.credits} marmitas).`
+      : '';
 
-    // fallback: varre todos os botões e compara nome/texto de forma case-insensitive
-    if (!btn) {
-      const buttons = document.querySelectorAll('.add-package-to-cart');
-      btn = Array.from(buttons).find((b) => {
-        const n = ((b.dataset.name || b.textContent || '') + '').toLowerCase();
-        return n.includes(key);
-      });
+    if (upgradeMessageEl) {
+      upgradeMessageEl.innerHTML = `Você já está com o <strong>${currentName}</strong>.<br><br>` +
+        `Que tal atualizar para o <strong>${primarySuggestion.name}</strong> (${primarySuggestion.credits} marmitas)?${secondaryText}`;
     }
 
-    if (btn) {
-      btn.click(); // reaproveita a mesma lógica já existente
-      localStorage.removeItem('selectedPackage'); // evita re-aplicar no próximo load
-    } else {
-      // opcional: limpar a chave se não achar nada
-      localStorage.removeItem('selectedPackage');
-      console.warn('selectedPackage informado, mas nenhum botão correspondente foi encontrado:', key);
+    pendingUpgrade = { targetName: primarySuggestion.name };
+    upgradeAcceptBtn?.setAttribute('data-target-name', primarySuggestion.name);
+
+    upgradeModal?.classList.remove('hidden');
+  }
+
+  function handlePackageSelection(button, { skipSuggestion = false, skipReplaceConfirm = false } = {}) {
+    if (!button) return;
+
+    const price = parseFloat(button.dataset.price);
+    const name = button.dataset.name;
+    const credits = parseInt(button.dataset.credits, 10);
+
+    const validPrice = Number.isFinite(price) ? price : 0;
+    const validCredits = Number.isFinite(credits) ? credits : 0;
+
+    if (!skipSuggestion && cart.packageName && cart.packageName === name) {
+      showUpgradeSuggestion(name);
+      return;
     }
-  })();
 
-  // --- LÓGICA ATUALIZADA: Adicionar e remover itens ---
-  menuItems.forEach((item) => {
-    const name = item.dataset.name;
-    const plusBtn = item.querySelector('.plus');
-    const minusBtn = item.querySelector('.minus');
+    if (!skipReplaceConfirm && cart.packageName && cart.packageName !== name) {
+      const userConfirmed = confirm(
+        'Você já tem um pacote no carrinho. Deseja substituí-lo? Todo o seu progresso no pacote atual será perdido.'
+      );
+      if (!userConfirmed) return;
+    }
 
-    plusBtn?.addEventListener('click', () => {
-      if (!cart.packageName) {
-        showNotification('Por favor, selecione um pacote para começar.', 'error');
-        document.querySelector('#pacotes')?.scrollIntoView({ behavior: 'smooth' });
-        return;
-      }
+    cart = {
+      packageName: name || null,
+      packagePrice: validPrice,
+      totalPrice: validPrice,
+      mealCredits: validCredits,
+      packageCredits: validCredits,
+      items: [],
+    };
 
-      if (cart.mealCredits <= 0) {
-        showNotification('Você não tem créditos suficientes!', 'error');
-        return;
-      }
+    document.querySelectorAll('.pacote-card').forEach((card) => card.classList.remove('selected'));
+    button.closest('.pacotes-grid')?.classList.add('has-selection');
+    button.closest('.pacote-card')?.classList.add('selected');
 
-      cart.mealCredits = Math.max(0, Number(cart.mealCredits) - 1);
-      const existingItem = cart.items.find((cartItem) => cartItem.name === name);
+    updateCartDisplay();
+    showNotification(`"${name}" selecionado! Você tem ${validCredits} créditos.`, 'success');
+    document.querySelector('#cardapio')?.scrollIntoView({ behavior: 'smooth' });
+    triggerCartAnimation();
+  }
 
-      if (existingItem) {
-        existingItem.quantity = Number(existingItem.quantity || 0) + 1;
-      } else {
-        cart.items.push({ name, quantity: 1 });
-      }
-
-      updateCartDisplay();
-      triggerCartAnimation();
-    });
-
-    minusBtn?.addEventListener('click', () => {
-      const existingItem = cart.items.find((cartItem) => cartItem.name === name);
-      if (existingItem && Number(existingItem.quantity) > 0) {
-        existingItem.quantity = Number(existingItem.quantity) - 1;
-        cart.mealCredits = Number(cart.mealCredits) + 1;
-
-        if (existingItem.quantity === 0) {
-          cart.items = cart.items.filter((cartItem) => cartItem.name !== name);
-        }
-
-        updateCartDisplay();
-      }
-    });
+  packageButtons.forEach((button) => {
+    button.addEventListener('click', () => handlePackageSelection(button));
   });
+
+  const closeUpgradeModal = (showInfo = false) => {
+    if (upgradeModal?.classList.contains('hidden')) return;
+    upgradeModal.classList.add('hidden');
+    if (showInfo) {
+      showNotification('Mantivemos o plano atual. Você pode trocar a qualquer momento.', 'info');
+    }
+    pendingUpgrade = null;
+  };
+
+  upgradeAcceptBtn?.addEventListener('click', () => {
+    const targetName = pendingUpgrade?.targetName || upgradeAcceptBtn.dataset.targetName;
+    if (!targetName) {
+      closeUpgradeModal();
+      return;
+    }
+
+    const targetButton = packageButtons.find((btn) => btn.dataset.name === targetName);
+    if (targetButton) {
+      handlePackageSelection(targetButton, { skipSuggestion: true, skipReplaceConfirm: true });
+    } else {
+      showNotification(`Plano ${targetName} não encontrado.`, 'error');
+    }
+    closeUpgradeModal();
+  });
+
+  upgradeDeclineBtn?.addEventListener('click', () => {
+    closeUpgradeModal(true);
+  });
+
+  upgradeCloseBtn?.addEventListener('click', () => closeUpgradeModal());
+  upgradeModal?.addEventListener('click', (event) => {
+    if (event.target === upgradeModal) closeUpgradeModal();
+  });
+
+  initializeMenuItems();
 
   // Carrega o carrinho salvo ao iniciar
   let savedCart = null;
@@ -455,6 +632,7 @@ logoutBtn?.addEventListener('click', () => {
   } catch (_) {}
 
   if (savedCart) {
+    // Se há um carrinho salvo, primeiro carregamos ele
     try {
       const parsed = JSON.parse(savedCart);
 
@@ -483,8 +661,218 @@ logoutBtn?.addEventListener('click', () => {
         localStorage.removeItem('marmitasCart');
       } catch (_) {}
     }
+  }
 
-    updateCartDisplay();
+  updateCartDisplay();
+
+  // --- Seleciona pacote vindo do index/login ---
+  function applyPreselectedPackage() {
+    let raw = null;
+    try {
+      raw = localStorage.getItem('selectedPackage');
+    } catch (_) {}
+
+    const key = (raw || '').toLowerCase().trim();
+    if (!key) return;
+
+    const aliasMap = {
+      semanal: 'semanal',
+      quinzenal: 'quinzenal',
+      mensal: 'mensal',
+      praticidade: 'semanal',
+      'planopraticidade': 'semanal',
+      constancia: 'quinzenal',
+      'planoconstancia': 'quinzenal',
+      equilibrio: 'mensal',
+      'planoequilibrio': 'mensal',
+    };
+
+    const sanitizedKey = key.replace(/[^a-z0-9]/g, '');
+    const canonicalKey = aliasMap[sanitizedKey] || aliasMap[key] || sanitizedKey;
+
+    const packageMap = {
+      semanal: { key: 'semanal', name: 'Plano Praticidade' },
+      quinzenal: { key: 'quinzenal', name: 'Plano Constância' },
+      mensal: { key: 'mensal', name: 'Plano Equilíbrio' },
+    };
+
+    const packageInfo = packageMap[canonicalKey];
+    if (!packageInfo) {
+      localStorage.removeItem('selectedPackage');
+      return;
+    }
+
+    let btn =
+      document.querySelector(`.add-package-to-cart[data-package-key="${packageInfo.key}"]`) ||
+      document.querySelector(`.add-package-to-cart[data-name="${packageInfo.name}"]`);
+
+    if (!btn) {
+      const buttons = document.querySelectorAll('.add-package-to-cart');
+      btn = Array.from(buttons).find((b) => (b.dataset.name || '').toLowerCase().includes(packageInfo.name.toLowerCase()));
+    }
+
+    if (!btn) {
+      localStorage.removeItem('selectedPackage');
+      console.warn('selectedPackage informado, mas nenhum botão correspondente foi encontrado:', key);
+      return;
+    }
+
+    const targetName = btn.dataset.name || packageInfo.name;
+
+    if (cart.packageName && cart.packageName === targetName) {
+      document.querySelectorAll('.pacote-card').forEach((card) => card.classList.remove('selected'));
+      btn.closest('.pacote-card')?.classList.add('selected');
+      btn.closest('.pacotes-grid')?.classList.add('has-selection');
+      localStorage.removeItem('selectedPackage');
+      return;
+    }
+
+    if (cart.packageName && cart.packageName !== targetName) {
+      cart = {
+        packageName: null,
+        packagePrice: 0,
+        totalPrice: 0,
+        mealCredits: 0,
+        packageCredits: 0,
+        items: [],
+      };
+      updateCartDisplay();
+      try {
+        localStorage.removeItem('marmitasCart');
+      } catch (_) {}
+    }
+
+    btn.click();
+    localStorage.removeItem('selectedPackage');
+  }
+
+  loadDynamicMenuItems()
+    .catch(() => {})
+    .finally(() => {
+      initializeMenuItems();
+      updateMenuItemQuantities();
+      applyPreselectedPackage();
+      setupMenuSlider();
+    });
+
+  function setupMenuSlider() {
+    const slider = document.querySelector('.menu-slider');
+    const items = slider ? Array.from(slider.querySelectorAll('.menu-item')) : [];
+    const prevArrow = document.querySelector('.slider-arrow.prev');
+    const nextArrow = document.querySelector('.slider-arrow.next');
+    const dotsContainer = document.querySelector('.navigation-dots');
+
+    if (!slider || !items.length) return;
+
+    let itemsPerView = calcItemsPerView();
+    let totalSlides = Math.max(1, Math.ceil(items.length / itemsPerView));
+    let currentSlide = 0;
+    let resizeRaf = null;
+
+    rebuildDots();
+    updateUI();
+
+    prevArrow?.addEventListener('click', () => goToSlide(currentSlide - 1));
+    nextArrow?.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+    dotsContainer?.addEventListener('click', (event) => {
+      const dot = event.target.closest('.dot');
+      if (!dot) return;
+      const index = Number(dot.dataset.index);
+      if (!Number.isFinite(index)) return;
+      goToSlide(index);
+    });
+
+    slider.addEventListener('scroll', () => {
+      if (!items.length) return;
+      const scrollLeft = slider.scrollLeft;
+      const targetIndex = items.reduce((closest, item, idx) => {
+        const distance = Math.abs(item.offsetLeft - scrollLeft);
+        return distance < closest.distance ? { distance, index: idx } : closest;
+      }, { distance: Number.POSITIVE_INFINITY, index: 0 }).index;
+
+      const inferredSlide = Math.floor(targetIndex / itemsPerView);
+      if (inferredSlide !== currentSlide) {
+        currentSlide = inferredSlide;
+        updateUI();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = null;
+        const nextPerView = calcItemsPerView();
+        if (nextPerView === itemsPerView) return;
+
+        itemsPerView = nextPerView;
+        totalSlides = Math.max(1, Math.ceil(items.length / itemsPerView));
+        currentSlide = Math.min(currentSlide, totalSlides - 1);
+        rebuildDots();
+        updateUI();
+        const targetItem = items[currentSlide * itemsPerView];
+        if (targetItem) {
+          slider.scrollTo({ left: targetItem.offsetLeft, behavior: 'auto' });
+        }
+      });
+    });
+
+    function calcItemsPerView() {
+      if (!items.length) return 1;
+      const sliderWidth = slider.clientWidth;
+      const itemWidth = items[0].clientWidth;
+      if (!itemWidth || !sliderWidth) return 1;
+      const computed = window.getComputedStyle(slider);
+      const gap = Number.parseFloat(computed.gap || computed.columnGap || '0') || 0;
+      const totalWidth = itemWidth + gap;
+      if (!totalWidth) return 1;
+      return Math.max(1, Math.round((sliderWidth + gap) / totalWidth));
+    }
+
+    function goToSlide(index) {
+      currentSlide = Math.max(0, Math.min(index, totalSlides - 1));
+      const targetItem = items[currentSlide * itemsPerView];
+      if (targetItem) {
+        slider.scrollTo({ left: targetItem.offsetLeft, behavior: 'smooth' });
+      }
+      updateUI();
+    }
+
+    function rebuildDots() {
+      if (!dotsContainer) return;
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < totalSlides; i += 1) {
+        const dot = document.createElement('span');
+        dot.className = `dot${i === currentSlide ? ' active' : ''}`;
+        dot.dataset.index = String(i);
+        dotsContainer.appendChild(dot);
+      }
+    }
+
+    function updateDots() {
+      if (!dotsContainer) return;
+      dotsContainer.querySelectorAll('.dot').forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === currentSlide);
+      });
+    }
+
+    function updateArrows() {
+      if (prevArrow) {
+        const disabled = currentSlide <= 0;
+        prevArrow.disabled = disabled;
+        prevArrow.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+      }
+      if (nextArrow) {
+        const disabled = currentSlide >= totalSlides - 1;
+        nextArrow.disabled = disabled;
+        nextArrow.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+      }
+    }
+
+    function updateUI() {
+      updateDots();
+      updateArrows();
+    }
   }
 
   // (demais blocos: slider, dots, etc. podem permanecer os mesmos)

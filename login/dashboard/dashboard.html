@@ -17,7 +17,7 @@
 
     <header>
         <nav class="navbar">
-            <a href="../../index.html" class="logo">Marmitas da <span class="logo-ka">Ka</span></a>
+            <a href="#welcome" class="logo">Marmitas da <span class="logo-ka">Ka</span></a>
             <div class="nav-links" id="navLinks">
                 <a href="#pacotes">Pacotes</a>
                 <a href="#cardapio">Cardápio</a>
@@ -39,6 +39,9 @@
                     </button>
                     <span id="credits-badge" class="credits-badge">Créditos: 0</span>
                 </div>
+                <a href="../../admin/admin.html" class="btn btn-secondary hidden admin-panel-link" id="adminLink">
+                    <i class="fas fa-screwdriver-wrench"></i> Administração
+                </a>
             </div>
             <div class="hamburger" id="hamburger">
                 <span></span>
@@ -70,7 +73,7 @@
                         <h3>Plano Praticidade</h3><h4>5 marmitas (semanal)</h4>
                         <p>Ideal para garantir seus almoços saudáveis durante a semana.</p>
                         <span class="price">R$ 99,90</span>
-                        <button class="btn btn-primary add-package-to-cart" data-price="99.90" data-name="Plano Praticidade" data-credits="5">Quero Esse</button>
+                        <button type="button" class="btn btn-primary add-package-to-cart" data-price="99.90" data-name="Plano Praticidade" data-credits="5" data-package-key="semanal">Quero Esse</button>
                     </div>
                     <div class="pacote-card popular">
                         <span class="tag">Mais Popular</span>
@@ -78,20 +81,27 @@
                         <h3>Plano Constância</h3><h4>10 marmitas (quinzenal)</h4>
                         <p>Economia e praticidade para duas semanas de alimentação equilibrada.</p>
                         <span class="price">R$ 189,90</span>
-                        <button class="btn btn-primary add-package-to-cart" data-price="189.90" data-name="Plano Constância" data-credits="10">Quero Esse</button>
+                        <button type="button" class="btn btn-primary add-package-to-cart" data-price="189.90" data-name="Plano Constância" data-credits="10" data-package-key="quinzenal">Quero Esse</button>
                     </div>
                     <div class="pacote-card">
                         <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 20 marmitas">
                         <h3>Plano Equilíbrio</h3><h4>20 marmitas (mensal)</h4>
                         <p>A solução completa para um mês inteiro sem se preocupar com as refeições.</p>
                         <span class="price">R$ 359,90</span>
-                        <button class="btn btn-primary add-package-to-cart" data-price="359.90" data-name="Plano Equilíbrio" data-credits="20">Quero Esse</button>
+                        <button type="button" class="btn btn-primary add-package-to-cart" data-price="359.90" data-name="Plano Equilíbrio" data-credits="20" data-package-key="mensal">Quero Esse</button>
                     </div>
                     <div class="pacote-card personalizado">
                         <i class="fas fa-pencil-alt fa-3x"></i>
                         <h3>Pacote Personalizado</h3><h4>Você no comando</h4>
                         <p>Escolha quantas marmitas vão cuidar de você durante o mês.</p>
-                        <a href="#cardapio" class="btn btn-primary">Montar Agora</a>
+                        <a
+                            href="https://wa.me/5579991428025?text=Tenho%20interesse%20em%20um%20pacote%20personalizado,%20poderia%20me%20ajudar?"
+                            class="btn btn-primary"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Falar no WhatsApp
+                        </a>
                     </div>
                 </div>
             </div>
@@ -212,18 +222,30 @@
         <p>&copy; 2025 Marmitas da Ka. Todos os direitos reservados.</p>
     </footer>
 
-    <div id="clearCartModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h2>Esvaziar Carrinho</h2>
-            <p>O que deseja limpar?</p>
-            <div class="modal-options">
-                <button data-mode="1" class="btn btn-secondary">Apenas Itens</button>
-                <button data-mode="2" class="btn btn-secondary">Apenas o Pacote</button>
-                <button data-mode="3" class="btn btn-primary">Limpar Tudo</button>
-            </div>
-            <button id="closeModalBtn" class="modal-close-btn">&times;</button>
+<div id="clearCartModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2>Esvaziar Carrinho</h2>
+        <p>O que deseja limpar?</p>
+        <div class="modal-options">
+            <button data-mode="1" class="btn btn-secondary">Apenas Itens</button>
+            <button data-mode="2" class="btn btn-secondary">Apenas o Pacote</button>
+            <button data-mode="3" class="btn btn-primary">Limpar Tudo</button>
         </div>
+        <button id="closeModalBtn" class="modal-close-btn">&times;</button>
     </div>
+</div>
+
+<div id="upgradeModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2>Sugestão de Plano</h2>
+        <p id="upgradeMessage" class="upgrade-message"></p>
+        <div class="modal-options">
+            <button id="upgradeAcceptBtn" class="btn btn-primary">Quero atualizar</button>
+            <button id="upgradeDeclineBtn" class="btn btn-secondary">Manter plano atual</button>
+        </div>
+        <button id="upgradeCloseBtn" class="modal-close-btn">&times;</button>
+    </div>
+</div>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>

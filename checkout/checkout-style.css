@@ -126,17 +126,36 @@
 .payment-details {
     padding: 15px; border: 2px solid #eee; border-radius: 8px;
     text-align: center; transition: all 0.3s ease;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
 }
 .payment-details i {
     font-size: 1.8rem; color: var(--primary-green);
     margin-bottom: 8px; display: block;
 }
-.payment-details span { font-weight: 600; }
+.payment-details span { font-weight: 600; font-size: 1rem; }
+.payment-details small {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.3;
+}
 .payment-option input[type="radio"]:checked + .payment-details {
     border-color: var(--primary-green);
     background-color: #f0fff0;
     transform: translateY(-3px);
     box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+}
+.payment-option input[type="radio"]:checked + .payment-details small {
+    color: var(--primary-green);
+}
+.payment-option[data-method="pix"] .payment-details {
+    background-image: linear-gradient(135deg, rgba(76, 175, 80, 0.08), rgba(143, 255, 196, 0.15));
+}
+.payment-option[data-method="cash"] .payment-details {
+    background-image: linear-gradient(135deg, rgba(255, 221, 153, 0.15), rgba(255, 245, 217, 0.25));
 }
 
 /* --- FORMULÁRIO DE ENTREGA --- */
@@ -155,7 +174,63 @@
 .form-row { display: flex; gap: 15px; }
 .form-row input { width: 100%; }
 .btn-finish-order { width: 100%; margin-top: 10px; }
-.delivery-time h3 { font-size: 1.1rem; margin-bottom: 10px; }
+.delivery-time h3 { font-size: 1.1rem; margin-bottom: 12px; }
+.delivery-time-select {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    border: 1px solid rgba(76, 175, 80, 0.14);
+    background: #fff;
+}
+.delivery-time-select i {
+    font-size: 0.85rem;
+    color: var(--primary-green);
+    background: rgba(76, 175, 80, 0.14);
+    border-radius: 50%;
+    padding: 4px;
+}
+.delivery-time-select select {
+    background: transparent;
+    border: none;
+    font-weight: 600;
+    color: #1f2937;
+    width: 100%;
+    appearance: none;
+    font-size: 0.85rem;
+    padding-right: 22px;
+    margin-bottom: 0;
+}
+.delivery-time-select::after {
+    content: '\f107';
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary-green);
+    pointer-events: none;
+}
+.delivery-time-select select:focus {
+    outline: none;
+    box-shadow: none;
+}
+.delivery-time-hint {
+    font-size: 0.8rem;
+    color: #4b5563;
+    margin-top: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+}
+.delivery-time-hint i {
+    color: var(--secondary-purple);
+    margin-top: 1px;
+}
 
 /* --- OVERLAY --- */
 .overlay-container {

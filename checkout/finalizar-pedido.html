@@ -28,32 +28,20 @@
                     <div class="payment-methods">
                         <h3>Forma de Pagamento</h3>
                         <div class="payment-options">
-                            <label for="pix" class="payment-option">
+                            <label class="payment-option" for="pix" data-method="pix">
                                 <input type="radio" id="pix" name="payment" value="pix" checked>
                                 <div class="payment-details">
                                     <i class="fas fa-qrcode"></i>
                                     <span>PIX</span>
+                                    <small>Enviaremos a chave para o seu WhatsApp</small>
                                 </div>
                             </label>
-                            <label for="credit" class="payment-option">
-                                <input type="radio" id="credit" name="payment" value="credit">
-                                <div class="payment-details">
-                                    <i class="fas fa-credit-card"></i>
-                                    <span>Crédito</span>
-                                </div>
-                            </label>
-                            <label for="debit" class="payment-option">
-                                <input type="radio" id="debit" name="payment" value="debit">
-                                <div class="payment-details">
-                                    <i class="fas fa-credit-card"></i>
-                                    <span>Débito</span>
-                                </div>
-                            </label>
-                            <label for="cash" class="payment-option">
+                            <label class="payment-option" for="cash" data-method="cash">
                                 <input type="radio" id="cash" name="payment" value="cash">
                                 <div class="payment-details">
                                     <i class="fas fa-money-bill-wave"></i>
                                     <span>Dinheiro</span>
+                                    <small>Pague na entrega com troco se precisar</small>
                                 </div>
                             </label>
                         </div>
@@ -80,8 +68,6 @@
                             <input type="text" id="bairro" placeholder="Bairro" required>
                         </div>
                         <input type="text" id="complemento" placeholder="Complemento (Apto, Bloco, etc.)">
-                        <textarea id="referencia" placeholder="Ponto de Referência" rows="2"></textarea>
-                        
                         <div class="form-row" style="align-items: center; margin-bottom: 15px;">
                             <input type="checkbox" id="save-address" name="save-address" style="width: auto;">
                             <label for="save-address" style="margin-bottom: 0;">Guardar endereço para a próxima compra</label>
@@ -89,12 +75,18 @@
                         
                         <div class="delivery-time">
                             <h3>Horário de Entrega</h3>
-                            <select id="delivery-time-select" required>
-                                <option value="" disabled selected>Selecione um horário</option>
-                                <option value="manha">Manhã (8h - 12h)</option>
-                                <option value="tarde">Tarde (13h - 18h)</option>
-                                <option value="noite">Noite (18h - 22h)</option>
-                            </select>
+                            <div class="delivery-time-select">
+                                <i class="fas fa-clock"></i>
+                                <select id="delivery-time-select" required>
+                                    <option value="" disabled selected>Selecione um horário</option>
+                                    <option value="manha">Manhã (08h - 12h)</option>
+                                    <option value="tarde">Tarde (13h - 18h)</option>
+                                    <option value="noite">Noite (18h - 22h)</option>
+                                </select>
+                            </div>
+                            <p class="delivery-time-hint">
+                                <i class="fas fa-info-circle"></i> A produção é entregue na segunda-feira subsequente. Ajustamos juntos qualquer detalhe pelo WhatsApp.
+                            </p>
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-large btn-finish-order">Finalizar Pedido</button>
@@ -127,7 +119,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <script src="../../firebase-config.js"></script>
+    <script src="../firebase-config.js"></script>
      <script src="checkout-script.js"></script>
 </body>
 </html>
