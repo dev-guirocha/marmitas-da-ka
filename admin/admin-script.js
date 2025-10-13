@@ -1,188 +1,113 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Configurações
   const PATH_LOGIN = '../login/login.html';
   const DASHBOARD_URL = '../login/dashboard/dashboard.html';
+  const ADMIN_EMAILS = ['karinekawai@hotmail.com', 'guiccpa@gmail.com', 'guntato@marmitasdaka.com.br']; // ✅ ADICIONE SEUS EMAILS
   const BUSINESS_WHATSAPP = '5579991428025';
-  const ADMIN_EMAILS = ['contato@marmitasdaka.com.br'];
 
-  const ORDER_STATUS_OPTIONS = [
-    { value: 'pendente', label: 'Pendente' },
-    { value: 'confirmado', label: 'Confirmado' },
-    { value: 'em_preparo', label: 'Em preparo' },
-    { value: 'enviado', label: 'Enviado' },
-    { value: 'entregue', label: 'Entregue' },
-    { value: 'cancelado', label: 'Cancelado' },
-  ];
+  // ✅ Inicializar Firebase
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-  const PAYMENT_STATUS_META = {
-    pending: { icon: 'fa-clock', label: 'Pagamento pendente', short: 'Pendente' },
-    paid: { icon: 'fa-circle-check', label: 'Pagamento confirmado', short: 'Pago' },
-    cancelled: { icon: 'fa-circle-xmark', label: 'Pedido cancelado', short: 'Cancelado' },
-  };
-
+  // Elementos base
   const loadingScreen = document.getElementById('loadingScreen');
+  const logoutBtn = document.getElementById('adminLogoutBtn');
+
+  // Pedidos
   const ordersListEl = document.getElementById('ordersList');
   const statusFilterEl = document.getElementById('statusFilter');
-  const logoutBtn = document.getElementById('adminLogoutBtn');
+  const orderTemplate = document.getElementById('orderTemplate');
+
+  // Cardápio
   const menuItemsListEl = document.getElementById('menuItemsList');
   const refreshMenuBtn = document.getElementById('refreshMenuBtn');
   const newMenuItemForm = document.getElementById('newMenuItemForm');
-  const orderTemplate = document.getElementById('orderTemplate');
   const menuTemplate = document.getElementById('menuItemTemplate');
-  const liveRegion = document.getElementById('live-region');
+  const fileInput = document.getElementById('itemImage');
+  const fileChosenSpan = document.getElementById('file-chosen');
+  const submitBtn = newMenuItemForm?.querySelector('button[type="submit"]');
 
-  const formFields = {
-    name: document.getElementById('itemName'),
-    description: document.getElementById('itemDescription'),
-    imageFile: document.getElementById('itemImage'),
-    imageUrl: document.getElementById('itemImageUrl'),
-    category: document.getElementById('itemCategory'),
+  const PAYMENT_STATES = {
+    pending: { label: 'Pendente', className: 'pending' },
+    paid: { label: 'Pago', className: 'paid' },
+    cancelled: { label: 'Cancelado', className: 'cancelled' },
   };
 
+  let currentUser = null;
   let ordersData = [];
   let menuItemsData = [];
-  let currentUser = null;
-  let isAdmin = false;
-  let menuLoading = false;
-  let ordersLoading = false;
 
-  let paymentMenuEl = null;
-  let paymentMenuAnchor = null;
-  let paymentMenuOrder = null;
+  // ==============================================
+  // CORREÇÃO DO BUG - LIMPEZA DE ELEMENTOS PROBLEMÁTICOS
+  // ==============================================
 
-  const handleOutsidePaymentClick = (event) => {
-    if (!paymentMenuEl) return;
-    if (paymentMenuEl.contains(event.target) || paymentMenuAnchor?.contains(event.target)) return;
-    closePaymentMenu();
-  };
+  const cleanProblematicElements = () => {
+    // Remover elementos com datas específicas
+    document.querySelectorAll('*').forEach(element => {
+      const text = element.textContent || '';
+      if (text.includes('12/10/2025') || text.includes('13:10:21')) {
+        element.remove();
+      }
+    });
 
-  function closePaymentMenu() {
-    if (paymentMenuEl) {
-      paymentMenuEl.remove();
-      paymentMenuEl = null;
-      paymentMenuAnchor = null;
-      paymentMenuOrder = null;
-      document.removeEventListener('click', handleOutsidePaymentClick);
-    }
-  }
-
-  const updatePaymentIndicator = (indicatorEl, state = 'pending') => {
-    if (!indicatorEl) return;
-    const meta = PAYMENT_STATUS_META[state] || PAYMENT_STATUS_META.pending;
-    indicatorEl.dataset.state = state;
-    indicatorEl.title = meta.label;
-    const icon = indicatorEl.querySelector('i');
-    if (icon) icon.className = `fas ${meta.icon}`;
-  };
-
-const openPaymentMenu = (order, anchor, card) => {
-  if (!anchor || !card) return;
-  if (paymentMenuEl && paymentMenuOrder === order) {
-    closePaymentMenu();
-    return;
-  }
-
-  closePaymentMenu();
-
-  const menu = document.createElement('div');
-  menu.className = 'payment-menu';
-
-    const options = [
-      { key: 'paid', label: 'Marcar como pago', icon: 'fa-circle-check' },
-      { key: 'pending', label: 'Marcar como pendente', icon: 'fa-clock' },
-      { key: 'cancelled', label: 'Cancelar pedido', icon: 'fa-circle-xmark' },
+    // Remover tooltips/avisos problemáticos
+    const problematicSelectors = [
+      '[class*="tooltip"]',
+      '[class*="hover"]',
+      '[class*="bubble"]',
+      '[class*="popup"]',
+      '[class*="notification"]:not(.notification)'
     ];
 
-    options.forEach((opt) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.innerHTML = `<i class="fas ${opt.icon}"></i> ${opt.label}`;
-      if ((order.paymentStatus || 'pending') === opt.key) {
-        btn.disabled = true;
-        btn.classList.add('is-current');
-      }
-      btn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        setPaymentStatus(order, opt.key);
+    problematicSelectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach(element => {
+        if (!element.closest('.order-card') && !element.classList.contains('notification')) {
+          element.remove();
+        }
       });
-      menu.appendChild(btn);
     });
-
-    const whatsappBtn = document.createElement('button');
-    whatsappBtn.type = 'button';
-    whatsappBtn.className = 'payment-menu__action';
-    whatsappBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Abrir conversa no WhatsApp';
-    whatsappBtn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      const link = `https://wa.me/${BUSINESS_WHATSAPP}?text=${encodeURIComponent(buildWhatsappMessage(order))}`;
-      window.open(link, '_blank', 'noopener');
-      closePaymentMenu();
-    });
-    menu.appendChild(whatsappBtn);
-
-  const footer = card.querySelector('.order-card__footer');
-  const targetContainer = footer || card;
-  targetContainer.appendChild(menu);
-  menu.style.minWidth = `${Math.max(220, anchor.offsetWidth + 40)}px`;
-
-  const rect = menu.getBoundingClientRect();
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-  if (rect.top < 0) {
-    menu.style.bottom = 'auto';
-    menu.style.top = 'calc(100% + 12px)';
-  }
-  if (rect.bottom > viewportHeight) {
-    menu.style.top = 'auto';
-    menu.style.bottom = 'calc(100% + 12px)';
-  }
-
-  paymentMenuEl = menu;
-  paymentMenuAnchor = anchor;
-    paymentMenuOrder = order;
-
-    setTimeout(() => document.addEventListener('click', handleOutsidePaymentClick), 0);
   };
 
-  function setPaymentStatus(order, status) {
-    if (!order) return;
+  // ==============================================
+  // AUTH - VERSÃO CORRIGIDA (SEM FIRESTORE)
+  // ==============================================
 
-    const previous = order.paymentStatus || 'pending';
-    order.paymentStatus = status;
+  const checkAdminPrivileges = async (user) => {
+      if (!user) {
+          console.log('❌ Usuário não autenticado');
+          return false;
+      }
+      
+      console.log('🔐 Verificando admin para:', user.email);
+      
+      // ✅ VERIFICAÇÃO APENAS POR EMAIL - SEM FIRESTORE (evita erro CORS)
+      const isAdmin = ADMIN_EMAILS.includes(user.email);
+      
+      if (isAdmin) {
+          console.log('✅ ACESSO PERMITIDO - Email administrador');
+          return true;
+      } else {
+          console.log('❌ ACESSO NEGADO - Email não é administrador');
+          console.log('💡 Emails permitidos:', ADMIN_EMAILS);
+          return false;
+      }
+  };
 
-    closePaymentMenu();
-    renderOrders();
+  // ==============================================
+  // UTILS
+  // ==============================================
 
-    if (typeof db === 'undefined' || !db?.collection) {
-      notify('Status de pagamento atualizado localmente.', 'info');
-      return;
-    }
-
-    db.collection('orders')
-      .doc(String(order.id))
-      .update({
-        paymentStatus: status,
-        paymentStatusUpdatedAt: typeof firebase !== 'undefined' && firebase?.firestore
-          ? firebase.firestore.FieldValue.serverTimestamp()
-          : null,
-      })
-      .then(() => {
-        const meta = PAYMENT_STATUS_META[status] || PAYMENT_STATUS_META.pending;
-        const type = status === 'paid' ? 'success' : (status === 'cancelled' ? 'error' : 'info');
-        notify(meta.label, type);
-      })
-      .catch((err) => {
-        console.error('Erro ao atualizar pagamento:', err);
-        order.paymentStatus = previous;
-        renderOrders();
-        notify('Não foi possível atualizar o status de pagamento.', 'error');
-      });
-  }
-
-  const notify = (message, type = 'success') => {
+  const showNotification = (message, type = 'success') => {
     document.querySelector('.notification')?.remove();
+    
     const toast = document.createElement('div');
     toast.className = `notification ${type}`;
     toast.setAttribute('role', 'alert');
     toast.setAttribute('aria-live', 'assertive');
+
+    const text = document.createElement('span');
+    text.className = 'notification__text';
+    text.textContent = message;
 
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -191,15 +116,9 @@ const openPaymentMenu = (order, anchor, card) => {
     closeBtn.innerHTML = '&times;';
     closeBtn.addEventListener('click', () => toast.remove());
 
-    const text = document.createElement('span');
-    text.className = 'notification__text';
-    text.textContent = message;
-
     toast.appendChild(text);
     toast.appendChild(closeBtn);
-
     document.body.appendChild(toast);
-    if (liveRegion) liveRegion.textContent = message;
 
     setTimeout(() => toast.remove(), 6000);
   };
@@ -207,195 +126,327 @@ const openPaymentMenu = (order, anchor, card) => {
   const hideLoading = () => {
     if (!loadingScreen) return;
     loadingScreen.style.opacity = '0';
-    setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
+    setTimeout(() => { 
+      loadingScreen.style.display = 'none'; 
+    }, 400);
+  };
+
+  const sanitizePhone = (phone) => {
+    const cleaned = String(phone || '').replace(/\D/g, '');
+    return cleaned || BUSINESS_WHATSAPP;
   };
 
   const formatDateTime = (order) => {
-    if (order?.createdAtServer?.toDate) {
-      return order.createdAtServer.toDate().toLocaleString('pt-BR');
+    try {
+      if (order?.createdAtServer?.toDate) {
+        return order.createdAtServer.toDate().toLocaleString('pt-BR');
+      }
+      if (order?.createdAtISO) {
+        return new Date(order.createdAtISO).toLocaleString('pt-BR');
+      }
+      if (order?.createdAt?.toDate) {
+        return order.createdAt.toDate().toLocaleString('pt-BR');
+      }
+    } catch (error) {
+      console.warn('Erro ao formatar data:', error);
     }
-    if (order?.createdAtISO) {
-      return new Date(order.createdAtISO).toLocaleString('pt-BR');
-    }
-    return '-';
+    return '—';
   };
 
-  const buildWhatsappMessage = (order) => {
-    if (order?.whatsappMessage) return order.whatsappMessage;
-
-    const items = Array.isArray(order?.cart?.items) && order.cart.items.length
-      ? order.cart.items.map((item) => `- ${Number(item.quantity || 0)}x ${item.name}`)
-      : ['- Montagem pendente'];
-
-    const addr = order?.address || {};
-    const lines = [
-      `Olá, ${order?.customer?.name || 'cliente'}, segue a confirmação do seu pedido:`,
-      '',
-      `${order?.cart?.packageName || 'Pacote selecionado'}:`,
-      ...items,
-      '',
-      `Endereço de entrega: ${addr.endereco || ''}, ${addr.numero || ''} - ${addr.bairro || ''} - CEP ${addr.cep || ''}`,
-    ];
-    if (addr.complemento) lines.push(`Complemento: ${addr.complemento}`);
-    if (order?.delivery?.slotLabel) lines.push(`Horário escolhido: ${order.delivery.slotLabel}`);
-    if (order?.delivery?.scheduledDate) {
-      lines.push(`Data de entrega das marmitas: ${order.delivery.scheduledDate}`);
-    }
-    lines.push('');
-    lines.push(`Pagamento: ${order?.payment?.label || 'A combinar'}`);
-    if (order?.cart?.totalPrice !== undefined) {
-      lines.push(`Valor total: R$ ${Number(order.cart.totalPrice || 0).toFixed(2).replace('.', ',')}`);
-    }
-    lines.push('Status: ' + (ORDER_STATUS_OPTIONS.find((opt) => opt.value === order?.status)?.label || 'Pendente'));
-    lines.push('');
-    lines.push('Contato do cliente:');
-    if (order?.customer?.name) lines.push(`- Nome: ${order.customer.name}`);
-    if (order?.customer?.email) lines.push(`- Email: ${order.customer.email}`);
-    if (order?.customer?.phone) lines.push(`- Telefone: ${order.customer.phone}`);
-
-    return lines.join('\n');
+  const getPaymentMeta = (state) => {
+    return PAYMENT_STATES[state] || PAYMENT_STATES.pending;
   };
 
-  function renderOrders() {
-    closePaymentMenu();
+  const updatePaymentButton = (indicatorEl, textEl, state) => {
+    const meta = getPaymentMeta(state);
+    indicatorEl.className = `payment-indicator ${meta.className}`;
+    textEl.textContent = meta.label;
+  };
 
+  const setFormLoading = (isLoading) => {
+    if (!submitBtn) return;
+    const text = submitBtn.querySelector('.btn-text');
+    const spinner = submitBtn.querySelector('.btn-spinner');
+    
+    submitBtn.disabled = isLoading;
+    text?.classList.toggle('hidden', isLoading);
+    spinner?.classList.toggle('hidden', !isLoading);
+  };
+
+  const buildWhatsAppMessage = (order) => {
+    const cart = order.cart || {};
+    const customer = order.customer || {};
+    const address = order.address || {};
+    const delivery = order.delivery || {};
+
+    const itemsLines = (cart.items || []).map((item) => 
+      `- ${item.quantity || 0}x ${item.name || ''}`
+    );
+
+    return [
+      `Olá, ${customer.name || 'cliente'}!`,
+      '',
+      `*Pedido #${String(order.id).slice(0, 7)}*`,
+      `*${cart.packageName || 'Pacote selecionado'}*:`,
+      ...(itemsLines.length ? itemsLines : ['- Nenhuma marmita selecionada.']),
+      '',
+      `*Endereço de entrega:*`,
+      `${address.endereco || ''}, ${address.numero || ''}`,
+      `${address.bairro || ''} - CEP ${address.cep || ''}`,
+      delivery.slotLabel ? `*Horário:* ${delivery.slotLabel}` : '',
+      delivery.scheduledDate ? `*Data prevista:* ${delivery.scheduledDate}` : '',
+      '',
+      `*Pagamento:* ${order.payment?.label || 'A combinar'}`,
+      `*Status:* ${getPaymentMeta(order.paymentStatus).label}`,
+      `*Valor total:* R$ ${Number(cart.totalPrice || 0).toFixed(2).replace('.', ',')}`,
+      '',
+      '*Contato do cliente:*',
+      customer.email ? `- Email: ${customer.email}` : '',
+      customer.phone ? `- Telefone: ${customer.phone}` : '',
+      '',
+      '_Marmitas da Ka - Comida saudável com amor 💚_'
+    ].filter(Boolean).join('\n');
+  };
+
+  // ==============================================
+  // ORDERS
+  // ==============================================
+
+  const loadOrders = async () => {
     if (!ordersListEl) return;
+    
+    ordersListEl.innerHTML = '<p class="placeholder">Carregando pedidos...</p>';
+    
+    try {
+      let snapshot;
+      
+      try {
+        snapshot = await db.collection('orders')
+          .orderBy('createdAtISO', 'desc')
+          .get();
+      } catch (err) {
+        console.warn('Falha ao ordenar por createdAtISO, tentando createdAtServer...');
+        snapshot = await db.collection('orders')
+          .orderBy('createdAtServer', 'desc')
+          .get();
+      }
+      
+      ordersData = snapshot.docs.map((doc) => {
+        const data = doc.data() || {};
+        return { 
+          id: doc.id, 
+          ...data,
+          paymentStatus: data.paymentStatus || 'pending',
+          status: data.status || 'pendente'
+        };
+      });
+      
+      renderOrders();
+    } catch (err) {
+      console.error('Erro ao carregar pedidos:', err);
+      ordersListEl.innerHTML = '<p class="placeholder">Falha ao carregar pedidos.</p>';
+      showNotification('Erro ao carregar pedidos.', 'error');
+    }
+  };
 
-    if (!ordersData.length) {
+  const renderOrders = () => {
+    if (!ordersListEl) return;
+    
+    const filter = statusFilterEl?.value || 'todos';
+    const filtered = filter === 'todos'
+      ? ordersData
+      : ordersData.filter((order) => (order.status || 'pendente') === filter);
+
+    if (!filtered.length) {
       ordersListEl.innerHTML = '<p class="placeholder">Nenhum pedido encontrado.</p>';
       return;
     }
 
-    const filter = statusFilterEl?.value || 'todos';
-    const filtered = filter === 'todos'
-      ? ordersData
-      : ordersData.filter((order) => order.status === filter);
-
-    if (!filtered.length) {
-      ordersListEl.innerHTML = '<p class="placeholder">Nenhum pedido com esse status.</p>';
-      return;
-    }
-
     const fragment = document.createDocumentFragment();
+
     filtered.forEach((order) => {
       const tpl = orderTemplate.content.cloneNode(true);
       const card = tpl.querySelector('.order-card');
+      card.dataset.status = order.status || 'pendente';
 
-      const paymentState = order.paymentStatus || order.payment?.status || 'pending';
-      order.paymentStatus = paymentState;
+      const cart = order.cart || {};
+      const customer = order.customer || {};
+      const address = order.address || {};
+      const delivery = order.delivery || {};
+      const paymentStatus = order.paymentStatus || 'pending';
 
-      const paymentIndicator = tpl.querySelector('.order-payment-indicator');
-      updatePaymentIndicator(paymentIndicator, paymentState);
-      card.dataset.paymentState = paymentState;
-
-      tpl.querySelector('.order-id').textContent = `#${order.id}`;
+      // Preencher dados básicos
+      tpl.querySelector('.order-id').textContent = `Pedido #${String(order.id).slice(0, 7)}`;
       tpl.querySelector('.order-date').textContent = formatDateTime(order);
-      tpl.querySelector('.order-package').textContent = order?.cart?.packageName || '-';
-      tpl.querySelector('.order-total').textContent = `Total: R$ ${Number(order?.cart?.totalPrice || 0).toFixed(2).replace('.', ',')}`;
+      tpl.querySelector('.order-package').textContent = cart.packageName || '—';
+      tpl.querySelector('.order-total').textContent = `Total: R$ ${Number(cart.totalPrice || 0).toFixed(2).replace('.', ',')}`;
+      tpl.querySelector('.order-customer').textContent = customer.name || 'Cliente';
+      tpl.querySelector('.order-contact').textContent = `${customer.phone || '—'} | ${customer.email || '—'}`;
+      tpl.querySelector('.order-address').textContent = `${address.endereco || ''}, ${address.numero || ''} - ${address.bairro || ''}`.trim();
+      tpl.querySelector('.order-schedule').textContent = delivery.slotLabel || 'Horário a combinar';
 
+      // Lista de itens
       const itemsList = tpl.querySelector('.order-items');
       itemsList.innerHTML = '';
-      if (Array.isArray(order?.cart?.items) && order.cart.items.length) {
-        order.cart.items.forEach((item) => {
-          const li = document.createElement('li');
-          li.textContent = `${item.quantity}x ${item.name}`;
-          itemsList.appendChild(li);
-        });
-      } else {
+      (cart.items || []).forEach((item) => {
         const li = document.createElement('li');
-        li.textContent = 'Nenhuma marmita selecionada.';
+        li.textContent = `${item.quantity || 0}x ${item.name || ''}`;
         itemsList.appendChild(li);
-      }
+      });
 
-      tpl.querySelector('.order-customer').textContent = order?.customer?.name || 'Cliente';
-      const contactLines = [];
-      if (order?.customer?.email) contactLines.push(order.customer.email);
-      if (order?.customer?.phone) contactLines.push(order.customer.phone);
-      tpl.querySelector('.order-contact').textContent = contactLines.join(' | ') || 'Sem contato cadastrado.';
-
-      const addr = order?.address || {};
-      const addressLine = `${addr.endereco || ''}, ${addr.numero || ''} - ${addr.bairro || ''} - CEP ${addr.cep || ''}`;
-      tpl.querySelector('.order-address').textContent = addressLine.trim();
-      const scheduleParts = [];
-      if (order?.delivery?.slotLabel) scheduleParts.push(order.delivery.slotLabel);
-      if (order?.delivery?.scheduledDate) scheduleParts.push(order.delivery.scheduledDate);
-      tpl.querySelector('.order-schedule').textContent = scheduleParts.join(' | ') || 'Horário a combinar.';
-      const paymentMeta = PAYMENT_STATUS_META[paymentState] || PAYMENT_STATUS_META.pending;
-      tpl.querySelector('.order-payment').textContent = `Pagamento: ${order?.payment?.label || 'A combinar'} • ${paymentMeta.label}`;
-
+      // Select de status
       const statusSelect = tpl.querySelector('.order-status');
-      ORDER_STATUS_OPTIONS.forEach((opt) => {
-        const optionEl = document.createElement('option');
-        optionEl.value = opt.value;
-        optionEl.textContent = opt.label;
-        if (opt.value === (order.status || 'pendente')) optionEl.selected = true;
-        statusSelect.appendChild(optionEl);
+      const statusOptions = ['pendente', 'confirmado', 'em_preparo', 'enviado', 'entregue', 'cancelado'];
+      
+      statusOptions.forEach((status) => {
+        const option = document.createElement('option');
+        option.value = status;
+        option.textContent = status.replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase());
+        if (status === (order.status || 'pendente')) {
+          option.selected = true;
+        }
+        statusSelect.appendChild(option);
       });
-      statusSelect.dataset.id = order.id;
-      statusSelect.addEventListener('change', (event) => handleStatusChange(event, order));
+      
+      statusSelect.dataset.status = statusSelect.value;
+      statusSelect.addEventListener('change', (event) => 
+        updateOrderStatus(order, event.target, card)
+      );
 
-      const paymentBtn = tpl.querySelector('.payment-status');
-      const deliveryBtn = tpl.querySelector('.delivery-status');
+      // Status de pagamento
+      const paymentBtn = tpl.querySelector('.payment-status-btn');
+      const indicator = tpl.querySelector('.payment-indicator');
+      const paymentText = tpl.querySelector('.payment-text');
+      
+      updatePaymentButton(indicator, paymentText, paymentStatus);
+      paymentBtn.addEventListener('click', () => 
+        cyclePaymentStatus(order, indicator, paymentText)
+      );
 
-      paymentBtn.setAttribute('aria-label', `Status de pagamento: ${paymentMeta.short}`);
-      deliveryBtn.setAttribute('aria-label', 'Status de entrega');
-
-      paymentBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        openPaymentMenu(order, paymentBtn, card);
-      });
-
-      deliveryBtn.addEventListener('click', () => {
-        notify('Atualize o status de entrega usando o seletor acima.', 'info');
-      });
+      // Botão WhatsApp
+      const whatsappBtn = tpl.querySelector('.whatsapp-btn');
+      const phone = sanitizePhone(customer.phone);
+      const message = encodeURIComponent(buildWhatsAppMessage(order));
+      whatsappBtn.href = `https://wa.me/${phone}?text=${message}`;
+      whatsappBtn.title = 'Abrir conversa no WhatsApp';
 
       fragment.appendChild(tpl);
     });
 
     ordersListEl.innerHTML = '';
     ordersListEl.appendChild(fragment);
-  }
+
+    setTimeout(cleanProblematicElements, 100);
+  };
+
+  const updateOrderStatus = async (order, selectEl, cardEl) => {
+    const newStatus = selectEl.value;
+    const previousStatus = order.status || 'pendente';
+    
+    selectEl.dataset.status = newStatus;
+    selectEl.disabled = true;
+    
+    try {
+      await db.collection('orders').doc(String(order.id)).update({ 
+        status: newStatus,
+        statusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      order.status = newStatus;
+      if (cardEl) cardEl.dataset.status = newStatus;
+      showNotification('Status do pedido atualizado com sucesso.', 'success');
+    } catch (err) {
+      console.error('Erro ao atualizar status:', err);
+      selectEl.value = previousStatus;
+      selectEl.dataset.status = previousStatus;
+      order.status = previousStatus;
+      showNotification('Não foi possível atualizar o status.', 'error');
+    } finally {
+      selectEl.disabled = false;
+    }
+  };
+
+  const cyclePaymentStatus = async (order, indicatorEl, textEl) => {
+    const orderRef = db.collection('orders').doc(String(order.id));
+    const current = order.paymentStatus || 'pending';
+    const next = current === 'pending' ? 'paid' : current === 'paid' ? 'cancelled' : 'pending';
+    
+    try {
+      await orderRef.update({
+        paymentStatus: next,
+        paymentStatusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      order.paymentStatus = next;
+      updatePaymentButton(indicatorEl, textEl, next);
+      showNotification(`Pagamento marcado como ${getPaymentMeta(next).label.toLowerCase()}.`);
+    } catch (err) {
+      console.error('Erro ao atualizar pagamento:', err);
+      showNotification('Não foi possível atualizar o status de pagamento.', 'error');
+    }
+  };
+
+  // ==============================================
+  // MENU
+  // ==============================================
+
+  const loadMenuItems = async (notifySuccess = false) => {
+    if (!menuItemsListEl) return;
+    
+    menuItemsListEl.innerHTML = '<p class="placeholder">Carregando itens do cardápio...</p>';
+    
+    try {
+      const snapshot = await db.collection('menuItems').orderBy('name').get();
+      menuItemsData = snapshot.docs.map((doc) => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+      
+      renderMenuItems();
+      
+      if (notifySuccess) {
+        showNotification('Cardápio atualizado com sucesso.');
+      }
+    } catch (err) {
+      console.error('Erro ao carregar cardápio:', err);
+      menuItemsListEl.innerHTML = '<p class="placeholder">Falha ao carregar itens do cardápio.</p>';
+      showNotification('Erro ao carregar cardápio.', 'error');
+    }
+  };
 
   const renderMenuItems = () => {
-    closePaymentMenu();
-
     if (!menuItemsListEl) return;
-
+    
     if (!menuItemsData.length) {
-      menuItemsListEl.innerHTML = '<p class="placeholder">Nenhum item cadastrado no cardápio.</p>';
+      menuItemsListEl.innerHTML = '<p class="placeholder">Nenhum item cadastrado.</p>';
       return;
     }
 
     const fragment = document.createDocumentFragment();
+    
     menuItemsData.forEach((item) => {
       const tpl = menuTemplate.content.cloneNode(true);
       const card = tpl.querySelector('.menu-card');
-      card.dataset.id = item.id;
-
+      const title = tpl.querySelector('.menu-card__title');
       const image = tpl.querySelector('.menu-card__image');
-      image.src = item.imageUrl || 'https://via.placeholder.com/360x220?text=Marmita';
-      image.alt = item.name || 'Prato do cardápio';
+      const toggleBtn = tpl.querySelector('.toggle-active-btn');
+      const deleteBtn = tpl.querySelector('.delete-btn');
 
-      tpl.querySelector('.menu-card__title').textContent = item.name || 'Novo prato';
-      tpl.querySelector('.menu-card__description').textContent = item.description || 'Sem descrição.';
+      card.dataset.id = item.id;
+      card.dataset.active = item.isActive === false ? 'false' : 'true';
+      
+      image.src = item.imageUrl || 'https://via.placeholder.com/360x220/4CAF50/white?text=Marmita';
+      image.alt = item.name || 'Item do cardápio';
+      title.textContent = item.name || 'Novo prato';
 
-      const metaParts = [];
-      metaParts.push(item.isActive === false ? 'Inativo' : 'Ativo');
-      if (item.category) metaParts.push(item.category);
-      if (item.createdAt?.toDate) {
-        metaParts.push(`Criado em ${item.createdAt.toDate().toLocaleDateString('pt-BR')}`);
-      }
-      tpl.querySelector('.menu-card__meta').textContent = metaParts.join(' · ');
-
-      const toggleBtn = tpl.querySelector('.toggle-active');
-      toggleBtn.textContent = item.isActive === false ? 'Reativar' : 'Desativar';
-      toggleBtn.dataset.id = item.id;
+      toggleBtn.innerHTML = item.isActive === false
+        ? '<i class="fas fa-eye"></i>'
+        : '<i class="fas fa-eye-slash"></i>';
+      toggleBtn.title = item.isActive === false ? 'Reativar item' : 'Desativar item';
+      toggleBtn.classList.add(item.isActive === false ? 'inactive' : 'active');
       toggleBtn.addEventListener('click', () => toggleMenuItem(item));
 
-      const openBtn = tpl.querySelector('.open-image');
-      openBtn.addEventListener('click', () => {
-        if (item.imageUrl) window.open(item.imageUrl, '_blank', 'noopener');
-      });
+      deleteBtn.addEventListener('click', () => deleteMenuItem(item));
 
       fragment.appendChild(tpl);
     });
@@ -404,243 +455,181 @@ const openPaymentMenu = (order, anchor, card) => {
     menuItemsListEl.appendChild(fragment);
   };
 
-  const handleStatusChange = (event, order) => {
-    const newStatus = event.target.value;
-    if (!order?.id || typeof db === 'undefined' || !db?.collection) {
-      notify('Não foi possível atualizar o status.', 'error');
-      return;
-    }
-
-    event.target.disabled = true;
-    db.collection('orders')
-      .doc(String(order.id))
-      .update({
-        status: newStatus,
-        updatedAtServer: typeof firebase !== 'undefined' && firebase?.firestore
-          ? firebase.firestore.FieldValue.serverTimestamp()
-          : null,
-      })
-      .then(() => {
-        notify('Status atualizado.');
-        order.status = newStatus;
-        renderOrders();
-      })
-      .catch((err) => {
-        console.error('Erro ao atualizar status do pedido:', err);
-        notify('Erro ao atualizar status.', 'error');
-        event.target.value = order.status || 'pendente';
-      })
-      .finally(() => {
-        event.target.disabled = false;
-      });
-  };
-
-  const loadOrders = () => {
-    if (typeof db === 'undefined' || !db?.collection) {
-      ordersListEl.innerHTML = '<p class="placeholder">Firestore não disponível.</p>';
-      hideLoading();
-      return;
-    }
-
-    ordersLoading = true;
-    db.collection('orders')
-      .orderBy('createdAtServer', 'desc')
-      .get()
-      .then((snapshot) => {
-        ordersData = [];
-        snapshot.forEach((doc) => {
-        const data = { id: doc.id, ...doc.data() };
-        if (!data.paymentStatus) data.paymentStatus = 'pending';
-        ordersData.push(data);
+  const toggleMenuItem = async (item) => {
+    try {
+      const nextState = item.isActive === false ? true : false;
+      
+      await db.collection('menuItems')
+        .doc(String(item.id))
+        .update({ 
+          isActive: nextState,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        renderOrders();
-      })
-      .catch((err) => {
-        console.error('Erro ao carregar pedidos:', err);
-        ordersListEl.innerHTML = '<p class="placeholder">Não foi possível carregar os pedidos.</p>';
-      })
-      .finally(() => {
-        ordersLoading = false;
-        hideLoading();
-      });
+      
+      item.isActive = nextState;
+      renderMenuItems();
+      
+      showNotification(
+        nextState ? 'Item ativado no cardápio.' : 'Item desativado do cardápio.'
+      );
+    } catch (err) {
+      console.error('Erro ao atualizar item:', err);
+      showNotification('Não foi possível atualizar o item.', 'error');
+    }
   };
 
-  const loadMenuItems = (notifySuccess = false) => {
-    if (typeof db === 'undefined' || !db?.collection) {
-      menuItemsListEl.innerHTML = '<p class="placeholder">Firestore não disponível.</p>';
-      return Promise.resolve();
+  const deleteMenuItem = async (item) => {
+    const confirmed = confirm(
+      `Tem certeza que deseja remover "${item.name}" do cardápio?\nEsta ação não pode ser desfeita.`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      await db.collection('menuItems').doc(String(item.id)).delete();
+      
+      menuItemsData = menuItemsData.filter((entry) => entry.id !== item.id);
+      renderMenuItems();
+      
+      showNotification('Item removido do cardápio com sucesso.');
+    } catch (err) {
+      console.error('Erro ao remover item:', err);
+      showNotification('Não foi possível remover o item.', 'error');
     }
-
-    menuLoading = true;
-    menuItemsListEl.innerHTML = '<p class="placeholder">Carregando itens...</p>';
-
-    return db.collection('menuItems')
-      .orderBy('name')
-      .get()
-      .then((snapshot) => {
-        menuItemsData = [];
-        snapshot.forEach((doc) => {
-          menuItemsData.push({ id: doc.id, ...doc.data() });
-        });
-        renderMenuItems();
-        if (notifySuccess) notify('Cardápio atualizado.');
-      })
-      .catch((err) => {
-        console.error('Erro ao carregar cardápio:', err);
-        menuItemsListEl.innerHTML = '<p class="placeholder">Não foi possível carregar o cardápio.</p>';
-      })
-      .finally(() => {
-        menuLoading = false;
-      });
-  };
-
-  const toggleMenuItem = (item) => {
-    if (!item?.id || typeof db === 'undefined' || !db?.collection) {
-      notify('Ação indisponível.', 'error');
-      return;
-    }
-
-    const nextState = item.isActive === false;
-    db.collection('menuItems')
-      .doc(item.id)
-      .update({
-        isActive: nextState,
-        updatedAt: typeof firebase !== 'undefined' && firebase?.firestore
-          ? firebase.firestore.FieldValue.serverTimestamp()
-          : null,
-      })
-      .then(() => {
-        notify(`Item ${nextState ? 'reativado' : 'desativado'}.`);
-        item.isActive = nextState;
-        const idx = menuItemsData.findIndex((entry) => entry.id === item.id);
-        if (idx >= 0) menuItemsData[idx].isActive = nextState;
-        renderMenuItems();
-      })
-      .catch((err) => {
-        console.error('Erro ao atualizar item do cardápio:', err);
-        notify('Não foi possível atualizar este item.', 'error');
-      });
-  };
-
-  const uploadMenuImage = (file) => {
-    if (!file || typeof firebase === 'undefined' || !firebase?.storage) {
-      return Promise.resolve(null);
-    }
-
-    const storageRef = firebase.storage().ref();
-    const fileRef = storageRef.child(`menu-items/${Date.now()}-${file.name}`);
-
-    return fileRef
-      .put(file)
-      .then((snapshot) => snapshot.ref.getDownloadURL());
   };
 
   const handleNewMenuItem = async (event) => {
     event.preventDefault();
-    if (!newMenuItemForm || menuLoading) return;
+    if (!newMenuItemForm) return;
 
-    const name = formFields.name.value.trim();
-    const description = formFields.description.value.trim();
-    const category = formFields.category.value.trim();
-    const imageUrlRaw = formFields.imageUrl.value.trim();
-    const imageFile = formFields.imageFile.files[0];
+    const name = newMenuItemForm.itemName.value.trim();
+    const description = newMenuItemForm.itemDescription.value.trim();
+    const imageFile = newMenuItemForm.itemImage.files[0];
 
     if (!name || !description) {
-      notify('Preencha nome e descrição do prato.', 'error');
+      showNotification('Por favor, preencha o nome e a descrição do prato.', 'error');
       return;
     }
 
-    if (typeof db === 'undefined' || !db?.collection) {
-      notify('Firestore não está disponível.', 'error');
+    if (name.length < 3) {
+      showNotification('O nome do prato deve ter pelo menos 3 caracteres.', 'error');
       return;
     }
 
-    newMenuItemForm.classList.add('is-loading');
+    setFormLoading(true);
 
     try {
-      let imageUrl = imageUrlRaw;
-      if (!imageUrl && imageFile) {
-        imageUrl = await uploadMenuImage(imageFile);
+      let imageUrl = '';
+      
+      if (imageFile) {
+        if (!imageFile.type.startsWith('image/')) {
+          throw new Error('Por favor, selecione um arquivo de imagem válido.');
+        }
+
+        if (imageFile.size > 5 * 1024 * 1024) {
+          throw new Error('A imagem deve ter no máximo 5MB.');
+        }
+
+        const storageRef = firebase.storage().ref();
+        const fileRef = storageRef.child(`menu-items/${Date.now()}-${imageFile.name}`);
+        const snapshot = await fileRef.put(imageFile);
+        imageUrl = await snapshot.ref.getDownloadURL();
       }
 
-      const payload = {
+      await db.collection('menuItems').add({
         name,
         description,
-        imageUrl: imageUrl || '',
-        category: category || '',
+        imageUrl,
         isActive: true,
-        createdBy: currentUser?.uid || null,
-        createdAt: typeof firebase !== 'undefined' && firebase?.firestore
-          ? firebase.firestore.FieldValue.serverTimestamp()
-          : null,
-      };
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
 
-      await db.collection('menuItems').add(payload);
-      notify('Item adicionado ao cardápio.');
       newMenuItemForm.reset();
-      await loadMenuItems(false);
+      if (fileChosenSpan) fileChosenSpan.textContent = 'Escolher ficheiro...';
+      
+      showNotification('Item adicionado ao cardápio com sucesso!');
+      
+      await loadMenuItems();
+      
     } catch (err) {
-      console.error('Erro ao adicionar item ao cardápio:', err);
-      notify('Erro ao publicar o item.', 'error');
+      console.error('Erro ao adicionar item:', err);
+      showNotification(
+        err.message || 'Não foi possível adicionar o item ao cardápio.', 
+        'error'
+      );
     } finally {
-      newMenuItemForm.classList.remove('is-loading');
+      setFormLoading(false);
     }
   };
 
-  const checkAdminPrivileges = async (user) => {
-    if (!user) return false;
-    if (ADMIN_EMAILS.includes(user.email)) return true;
-    if (typeof db === 'undefined' || !db?.collection) return false;
+  // ==============================================
+  // INIT
+  // ==============================================
 
-    try {
-      const doc = await db.collection('users').doc(user.uid).get();
-      return doc.exists && doc.data()?.role === 'admin';
-    } catch (err) {
-      console.error('Erro ao verificar privilégios de administrador:', err);
-      return false;
-    }
+  const initializePanel = () => {
+    console.log('🚀 Inicializando painel administrativo...');
+    
+    hideLoading();
+    cleanProblematicElements();
+    
+    loadOrders();
+    loadMenuItems();
+
+    logoutBtn?.addEventListener('click', () => {
+      const confirmed = confirm('Deseja realmente sair do painel administrativo?');
+      if (confirmed) {
+        auth.signOut().then(() => {
+          window.location.href = PATH_LOGIN;
+        });
+      }
+    });
+    
+    statusFilterEl?.addEventListener('change', renderOrders);
+    newMenuItemForm?.addEventListener('submit', handleNewMenuItem);
+    refreshMenuBtn?.addEventListener('click', () => loadMenuItems(true));
+    
+    fileInput?.addEventListener('change', () => {
+      if (!fileChosenSpan) return;
+      const file = fileInput.files?.[0];
+      fileChosenSpan.textContent = file?.name || 'Escolher ficheiro...';
+    });
+
+    // Limpeza contínua
+    setInterval(cleanProblematicElements, 3000);
   };
 
-  const init = async () => {
-    if (typeof auth === 'undefined' || !auth?.onAuthStateChanged) {
-      notify('Firebase Auth não disponível.', 'error');
-      hideLoading();
+  // ==============================================
+  // AUTH LISTENER PRINCIPAL
+  // ==============================================
+
+  const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    console.log('🔐 Estado de autenticação:', user ? `Usuário: ${user.email}` : 'Nenhum usuário');
+    
+    if (!user) {
+      window.location.href = PATH_LOGIN;
       return;
     }
 
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        notify('Faça login para acessar o painel administrativo.', 'error');
-        hideLoading();
-        setTimeout(() => { window.location.href = PATH_LOGIN; }, 1800);
+    try {
+      const allowed = await checkAdminPrivileges(user);
+      
+      if (!allowed) {
+        alert('Acesso negado. Você não tem permissões de administrador.');
+        window.location.href = DASHBOARD_URL;
         return;
       }
 
       currentUser = user;
-      isAdmin = await checkAdminPrivileges(user);
+      initializePanel();
+      
+    } catch (error) {
+      console.error('🚨 Erro na verificação:', error);
+      alert('Erro ao verificar permissões. Tente novamente.');
+      window.location.href = PATH_LOGIN;
+    }
+  });
 
-      if (!isAdmin) {
-        notify('Acesso restrito. Redirecionando...', 'error');
-        hideLoading();
-        setTimeout(() => { window.location.href = DASHBOARD_URL; }, 1800);
-        return;
-      }
-
-      hideLoading();
-      loadOrders();
-      loadMenuItems();
-
-      logoutBtn?.addEventListener('click', () => {
-        auth.signOut()
-          .then(() => { window.location.href = PATH_LOGIN; })
-          .catch(() => notify('Não foi possível encerrar a sessão.', 'error'));
-      });
-
-      statusFilterEl?.addEventListener('change', renderOrders);
-      newMenuItemForm?.addEventListener('submit', handleNewMenuItem);
-      refreshMenuBtn?.addEventListener('click', () => loadMenuItems(true));
-    });
-  };
-
-  init();
+  window.addEventListener('beforeunload', () => {
+    unsubscribe();
+  });
 });

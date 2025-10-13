@@ -10,6 +10,54 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="admin-style.css">
+    <style>
+        /* CSS de fallback para garantir funcionamento */
+        :root {
+            --primary-green: #4CAF50;
+            --secondary-color: #667eea;
+            --accent-color: #ff6b6b;
+            --admin-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--admin-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
     <div class="loading-screen" id="loadingScreen">
@@ -32,145 +80,132 @@
     </header>
 
     <main class="admin-container">
-        <section class="admin-card" id="ordersSection">
-            <div class="admin-card__header">
-                <h2><i class="fas fa-clipboard-list"></i> Pedidos</h2>
-                <div class="orders-filter">
-                    <label for="statusFilter">Status:</label>
-                    <select id="statusFilter">
-                        <option value="todos">Todos</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="confirmado">Confirmado</option>
-                        <option value="em_preparo">Em preparo</option>
-                        <option value="enviado">Enviado</option>
-                        <option value="entregue">Entregue</option>
-                        <option value="cancelado">Cancelado</option>
-                    </select>
+        <div class="admin-main-content">
+            <section class="admin-card" id="ordersSection">
+                <div class="admin-card__header">
+                    <h2><i class="fas fa-clipboard-list"></i> Pedidos Recebidos</h2>
+                    <div class="orders-filter">
+                        <label for="statusFilter">Filtrar por status:</label>
+                        <select id="statusFilter">
+                            <option value="todos">Todos</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="em_preparo">Em preparo</option>
+                            <option value="enviado">Enviado</option>
+                            <option value="entregue">Entregue</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-            <div id="ordersList" class="orders-list">
-                <p class="placeholder">Carregando pedidos...</p>
-            </div>
-        </section>
+                <div id="ordersList" class="orders-list">
+                    <p class="placeholder">Carregando pedidos...</p>
+                </div>
+            </section>
+        </div>
 
-        <section class="admin-card" id="newItemSection">
-            <h2><i class="fas fa-plus-circle"></i> Novo Item de Cardápio</h2>
-            <form id="newMenuItemForm" class="admin-form">
-                <div class="form-group">
-                    <label for="itemName">Nome do prato *</label>
-                    <input type="text" id="itemName" required placeholder="Ex: Frango grelhado com legumes">
-                </div>
-                <div class="form-group">
-                    <label for="itemDescription">Descrição *</label>
-                    <textarea id="itemDescription" rows="3" required placeholder="Breve descrição do prato"></textarea>
-                </div>
-                <div class="form-group form-group--split">
-                    <div>
-                        <label for="itemImage">Imagem (upload)</label>
+        <aside class="admin-sidebar">
+            <section class="admin-card" id="newItemSection">
+                <h2><i class="fas fa-plus-circle"></i> Novo Item de Cardápio</h2>
+                <form id="newMenuItemForm" class="admin-form">
+                    <div class="form-group">
+                        <label for="itemName">Nome do prato *</label>
+                        <input type="text" id="itemName" required placeholder="Ex: Frango grelhado com legumes">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemDescription">Descrição *</label>
+                        <textarea id="itemDescription" rows="3" required placeholder="Breve descrição do prato"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemImage">Imagem do prato</label>
+                        <label class="custom-file-upload" for="itemImage">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="file-chosen">Escolher ficheiro...</span>
+                        </label>
                         <input type="file" id="itemImage" accept="image/*">
                     </div>
-                    <div>
-                        <label for="itemImageUrl">ou URL da imagem</label>
-                        <input type="url" id="itemImageUrl" placeholder="https://">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="itemCategory">Categoria (opcional)</label>
-                    <input type="text" id="itemCategory" placeholder="Ex: Low carb, Vegetariano">
-                </div>
-                <button type="submit" class="btn btn-primary btn-large">
-                    <i class="fas fa-cloud-upload"></i> Publicar Item
-                </button>
-                <p class="form-hint">As imagens enviadas são salvas com segurança no armazenamento do Firebase.</p>
-            </form>
-        </section>
+                    <button type="submit" class="btn btn-primary btn-large">
+                        <span class="btn-text">Publicar Item</span>
+                        <span class="btn-spinner hidden"></span>
+                    </button>
+                </form>
+            </section>
 
-        <section class="admin-card" id="menuSection">
-            <div class="admin-card__header">
-                <h2><i class="fas fa-utensils"></i> Cardápio Atual</h2>
-                <button id="refreshMenuBtn" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-rotate"></i> Atualizar
-                </button>
-            </div>
-            <div id="menuItemsList" class="menu-items-list">
-                <p class="placeholder">Carregando itens do cardápio...</p>
-            </div>
-        </section>
+            <section class="admin-card" id="menuSection">
+                <div class="admin-card__header">
+                    <h2><i class="fas fa-utensils"></i> Cardápio Atual</h2>
+                    <button id="refreshMenuBtn" class="btn btn-secondary btn-sm" title="Atualizar lista">
+                        <i class="fas fa-rotate"></i>
+                    </button>
+                </div>
+                <div id="menuItemsList" class="menu-items-list">
+                    <p class="placeholder">Carregando itens...</p>
+                </div>
+            </section>
+        </aside>
     </main>
 
     <template id="orderTemplate">
         <article class="order-card">
+            <span class="order-card__badge order-id"></span>
             <header class="order-card__header">
-                <div class="order-card__meta">
-                    <span class="order-payment-indicator" data-state="pending" title="Pagamento pendente">
-                        <i class="fas fa-clock"></i>
-                    </span>
-                    <div class="order-card__title">
-                        <strong class="order-id"></strong>
-                        <span class="order-date"></span>
-                    </div>
+                <div class="order-card__title">
+                    <span class="order-date"></span>
                 </div>
-                <select class="order-status"></select>
+                <div class="order-card__status-wrapper">
+                    <select class="order-status" aria-label="Alterar status do pedido"></select>
+                </div>
             </header>
             <div class="order-card__body">
-                <div class="order-detail order-detail--package">
-                    <h3>Pacote</h3>
-                    <p class="order-package"></p>
-                    <p class="order-total"></p>
-                </div>
-                <div class="order-detail order-detail--items">
-                    <h3>Marmitas</h3>
-                    <ul class="order-items"></ul>
-                </div>
                 <div class="order-detail order-detail--customer">
-                    <h3>Cliente</h3>
+                    <h3><i class="fas fa-user"></i> Cliente</h3>
                     <p class="order-customer"></p>
                     <p class="order-contact"></p>
                 </div>
                 <div class="order-detail order-detail--delivery">
-                    <h3>Entrega</h3>
+                    <h3><i class="fas fa-map-marker-alt"></i> Entrega</h3>
                     <p class="order-address"></p>
                     <p class="order-schedule"></p>
-                    <p class="order-payment"></p>
+                </div>
+                <div class="order-detail order-detail--package">
+                    <h3><i class="fas fa-box-open"></i> Pacote</h3>
+                    <p class="order-package"></p>
+                    <p class="order-total"></p>
+                </div>
+                <div class="order-detail order-detail--items">
+                    <h3><i class="fas fa-utensils"></i> Marmitas</h3>
+                    <ul class="order-items"></ul>
                 </div>
             </div>
             <footer class="order-card__footer">
-                <button class="btn btn-secondary btn-sm payment-status">
-                    <i class="fas fa-credit-card"></i> Status de pagamento
+                <button class="btn btn-secondary btn-sm payment-status-btn">
+                    <span class="payment-indicator"></span>
+                    <span class="payment-text"></span>
                 </button>
-                <button class="btn btn-primary btn-sm delivery-status">
-                    <i class="fas fa-truck"></i> Status de entrega
-                </button>
+                <a class="btn btn-primary btn-sm whatsapp-btn" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-whatsapp"></i> Conversar
+                </a>
             </footer>
         </article>
     </template>
 
     <template id="menuItemTemplate">
         <article class="menu-card">
+            <div class="menu-card__status-indicator"></div>
             <img class="menu-card__image" src="" alt="">
             <div class="menu-card__content">
-                <div>
-                    <h3 class="menu-card__title"></h3>
-                    <p class="menu-card__description"></p>
-                    <p class="menu-card__meta"></p>
-                </div>
+                <h3 class="menu-card__title"></h3>
                 <div class="menu-card__actions">
-                    <button class="btn btn-secondary btn-sm toggle-active"></button>
-                    <button class="btn btn-link btn-sm open-image" type="button">
-                        <i class="fas fa-eye"></i> Ver imagem
-                    </button>
+                    <button class="btn-icon toggle-active-btn" title="Ativar/Desativar item"></button>
+                    <button class="btn-icon delete-btn" title="Apagar item"><i class="fas fa-trash-alt"></i></button>
                 </div>
             </div>
         </article>
     </template>
 
-    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
     <script src="../firebase-config.js"></script>
     <script src="admin-script.js"></script>
 </body>
