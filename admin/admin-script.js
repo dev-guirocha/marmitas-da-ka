@@ -5,10 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const ADMIN_EMAILS = ['karinekawai@hotmail.com', 'guiccpa@gmail.com', 'guntato@marmitasdaka.com.br']; // ✅ ADICIONE SEUS EMAILS
   const BUSINESS_WHATSAPP = '5579991428025';
 
-  // ✅ Inicializar Firebase
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
   // Elementos base
   const loadingScreen = document.getElementById('loadingScreen');
   const logoutBtn = document.getElementById('adminLogoutBtn');
