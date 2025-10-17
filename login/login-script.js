@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = message || '';
             span.classList.add('active');
         }
-        inputEl.style.borderColor = 'red';
+        inputEl.classList.add('has-error');
+        inputEl.setAttribute('aria-invalid', 'true');
     };
     const clearFieldError = (inputEl) => {
         if (!inputEl) return;
@@ -21,7 +22,75 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = '';
             span.classList.remove('active');
         }
-        inputEl.style.borderColor = '';
+        inputEl.classList.remove('has-error');
+        inputEl.removeAttribute('aria-invalid');
+    };
+
+    const sanitizePhone = (value = '') => String(value).replace(/\D/g, '').slice(0, 11);
+    const formatPhone = (value = '') => {
+        const digits = sanitizePhone(value);
+        if (digits.length <= 10) {
+            return digits.replace(/^(\d{0,2})(\d{0,4})(\d{0,4})$/, (_, a, b, c) => {
+                let result = '';
+                if (a) result += `(${a}`;
+                if (a && a.length === 2) result += ') ';
+                if (b) result += b;
+                if (b && b.length === 4) result += '-';
+                if (c) result += c;
+                return result;
+            });
+        }
+        return digits.replace(/^(\d{0,2})(\d{0,5})(\d{0,4})$/, (_, a, b, c) => {
+            let result = '';
+            if (a) result += `(${a}`;
+            if (a && a.length === 2) result += ') ';
+            if (b) result += b;
+            if (b && b.length === 5) result += '-';
+            if (c) result += c;
+            return result;
+        });
+    };
+
+    const setButtonLoading = (button, isLoading, loadingText) => {
+        if (!button) return;
+        if (isLoading) {
+            if (!button.dataset.originalText) {
+                button.dataset.originalText = button.textContent;
+            }
+            if (loadingText) {
+                button.textContent = loadingText;
+            }
+            button.disabled = true;
+            button.classList.add('is-loading');
+            button.setAttribute('aria-busy', 'true');
+        } else {
+            button.disabled = false;
+            button.classList.remove('is-loading');
+            button.removeAttribute('aria-busy');
+            if (button.dataset.originalText) {
+                button.textContent = button.dataset.originalText;
+            }
+        }
+    };
+
+    const setLinkLoading = (link, isLoading, loadingText) => {
+        if (!link) return;
+        if (isLoading) {
+            if (!link.dataset.originalText) {
+                link.dataset.originalText = link.textContent;
+            }
+            if (loadingText) {
+                link.textContent = loadingText;
+            }
+            link.classList.add('is-loading');
+            link.setAttribute('aria-disabled', 'true');
+        } else {
+            link.classList.remove('is-loading');
+            link.removeAttribute('aria-disabled');
+            if (link.dataset.originalText) {
+                link.textContent = link.dataset.originalText;
+            }
+        }
     };
 
     const showNotification = (message, type = 'success') => {
@@ -66,11 +135,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const signUpEmailEl = qs('#signUpEmail', signUpForm);
     const signUpPhoneEl = qs('#signUpPhone', signUpForm);
     const signUpPasswordEl = qs('#signUpPassword', signUpForm);
+    const signInSubmitBtn = signInForm?.querySelector('button[type="submit"]');
+    const signUpSubmitBtn = signUpForm?.querySelector('button[type="submit"]');
 
     [signInEmailEl, signInPasswordEl, signUpNameEl, signUpEmailEl, signUpPhoneEl, signUpPasswordEl]
     .filter(Boolean)
     .forEach((el) => {
         el.addEventListener('input', () => clearFieldError(el));
+    });
+
+    signUpPhoneEl?.addEventListener('input', (event) => {
+        event.target.value = formatPhone(event.target.value);
     });
 
     signUpButton?.addEventListener('click', () => container?.classList.add('right-panel-active'));
@@ -83,13 +158,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = (signInEmailEl?.value || '').trim();
             const password = signInPasswordEl?.value || '';
 
-            if (!email || !password) {
-                showNotification('Por favor, preencha todos os campos.', 'error');
+            clearFieldError(signInEmailEl);
+            clearFieldError(signInPasswordEl);
+
+            let hasError = false;
+
+            if (!email) {
+                showFieldError(signInEmailEl, 'Informe seu e-mail.');
+                hasError = true;
+            } else if (!isEmail(email)) {
+                showFieldError(signInEmailEl, 'Digite um e-mail válido.');
+                hasError = true;
+            }
+
+            if (!password) {
+                showFieldError(signInPasswordEl, 'Informe sua senha.');
+                hasError = true;
+            } else if (password.length < 6) {
+                showFieldError(signInPasswordEl, 'A senha deve ter pelo menos 6 caracteres.');
+                hasError = true;
+            }
+
+            if (hasError) {
+                showNotification('Por favor, corrija os campos destacados.', 'error');
                 return;
             }
 
+            setButtonLoading(signInSubmitBtn, true, 'Entrando...');
+            let shouldUnlockButton = true;
+
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
+                    shouldUnlockButton = false;
                     showNotification(`Bem-vindo(a) de volta!`, 'success');
                     setTimeout(() => redirect('dashboard/dashboard.html'), 1500);
                 })
@@ -100,35 +200,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         showNotification('Ocorreu um erro ao tentar fazer login.', 'error');
                     }
+                })
+                .finally(() => {
+                    if (shouldUnlockButton) {
+                        setButtonLoading(signInSubmitBtn, false);
+                    }
                 });
         });
     }
 
     const forgotPasswordLink = qs('.forgot-password-link');
+    let resetInProgress = false;
     forgotPasswordLink?.addEventListener('click', (e) => {
         e.preventDefault();
-        let email = (signInEmailEl?.value || '').trim();
+        if (resetInProgress) return;
+        const email = (signInEmailEl?.value || '').trim();
 
-        if (!email || !isEmail(email)) {
-            const promptEmail = prompt('Informe o email cadastrado para recuperar a senha:') || '';
-            email = promptEmail.trim();
+        clearFieldError(signInEmailEl);
+        if (!email) {
+            showFieldError(signInEmailEl, 'Informe o e-mail cadastrado.');
+            showNotification('Informe o e-mail cadastrado para recuperar a senha.', 'error');
+            signInEmailEl?.focus();
+            return;
+        }
 
-            if (!email) {
-                showNotification('É necessário informar um email para recuperar a senha.', 'error');
-                return;
-            }
-
-            if (!isEmail(email)) {
-                showNotification('O email informado é inválido.', 'error');
-                return;
-            }
-
-            if (signInEmailEl) {
-                signInEmailEl.value = email;
-            }
+        if (!isEmail(email)) {
+            showFieldError(signInEmailEl, 'Digite um e-mail válido.');
+            showNotification('O email informado é inválido.', 'error');
+            signInEmailEl?.focus();
+            return;
         }
 
         showNotification('Enviando email de redefinição...', 'info');
+
+        resetInProgress = true;
+        setLinkLoading(forgotPasswordLink, true, 'Enviando...');
 
         auth.sendPasswordResetEmail(email)
             .then(() => {
@@ -141,6 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     showNotification('Não foi possível enviar o email de redefinição.', 'error');
                 }
+            })
+            .finally(() => {
+                resetInProgress = false;
+                setLinkLoading(forgotPasswordLink, false);
             });
     });
 
@@ -153,11 +263,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const phoneVal = (signUpPhoneEl?.value || '').trim();
             const pwdVal = signUpPasswordEl?.value || '';
 
-            if (!nameVal || !emailVal || !phoneVal || !pwdVal || pwdVal.length < 8) {
-                if(pwdVal.length < 8) showNotification('A senha deve ter pelo menos 8 caracteres.', 'error');
-                else showNotification('Por favor, preencha todos os campos.', 'error');
+            clearFieldError(signUpNameEl);
+            clearFieldError(signUpEmailEl);
+            clearFieldError(signUpPhoneEl);
+            clearFieldError(signUpPasswordEl);
+
+            let hasError = false;
+            const phoneDigits = sanitizePhone(phoneVal);
+            const formattedPhone = formatPhone(phoneDigits);
+
+            if (!nameVal) {
+                showFieldError(signUpNameEl, 'Informe seu nome completo.');
+                hasError = true;
+            } else if (nameVal.length < 3) {
+                showFieldError(signUpNameEl, 'O nome deve ter pelo menos 3 caracteres.');
+                hasError = true;
+            }
+
+            if (!emailVal) {
+                showFieldError(signUpEmailEl, 'Informe um e-mail.');
+                hasError = true;
+            } else if (!isEmail(emailVal)) {
+                showFieldError(signUpEmailEl, 'Digite um e-mail válido.');
+                hasError = true;
+            }
+
+            if (!phoneDigits) {
+                showFieldError(signUpPhoneEl, 'Informe o seu WhatsApp com DDD.');
+                hasError = true;
+            } else if (phoneDigits.length < 10) {
+                showFieldError(signUpPhoneEl, 'O WhatsApp deve ter DDD e número completo.');
+                hasError = true;
+            } else {
+                if (signUpPhoneEl) signUpPhoneEl.value = formattedPhone;
+            }
+
+            if (!pwdVal) {
+                showFieldError(signUpPasswordEl, 'Crie uma senha.');
+                hasError = true;
+            } else if (pwdVal.length < 8) {
+                showFieldError(signUpPasswordEl, 'A senha deve ter pelo menos 8 caracteres.');
+                hasError = true;
+            }
+
+            if (hasError) {
+                showNotification('Por favor, corrija os campos destacados antes de continuar.', 'error');
                 return;
             }
+
+            setButtonLoading(signUpSubmitBtn, true, 'Criando conta...');
+            let shouldUnlockButton = true;
 
             auth.createUserWithEmailAndPassword(emailVal, pwdVal)
                 .then((userCredential) => {
@@ -166,11 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return db.collection('users').doc(user.uid).set({
                         name: nameVal,
                         email: emailVal,
-                        phone: phoneVal,
+                        phone: formattedPhone,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 })
                 .then(() => {
+                    shouldUnlockButton = false;
                     setTimeout(() => redirect('dashboard/dashboard.html'), 1500);
                 })
                 .catch((error) => {
@@ -179,6 +335,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         showNotification('Este email já está a ser utilizado.', 'error');
                     } else {
                         showNotification('Ocorreu um erro ao criar a conta.', 'error');
+                    }
+                })
+                .finally(() => {
+                    if (shouldUnlockButton) {
+                        setButtonLoading(signUpSubmitBtn, false);
                     }
                 });
         });

@@ -15,7 +15,7 @@
     </div>
 
     <header>
-        <nav class="navbar">
+        <nav class="navbar" aria-label="Navegação principal">
             <a href="#inicio" class="logo">Marmitas da <span class="logo-ka">Ka</span></a>
             
             <div class="nav-links" id="navLinks">
@@ -26,14 +26,16 @@
             </div>
             
             <div class="nav-actions">
-                <a href="login/login.html" class="btn btn-login"><i class="fas fa-user"></i> Login / Cadastro</a>
+                <a href="login/login.html" class="btn btn-login">
+                    <i class="fas fa-user" aria-hidden="true"></i> Login / Cadastro
+                </a>
             </div>
             
-            <div class="hamburger" id="hamburger">
+            <button type="button" class="hamburger" id="hamburger" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="navLinks">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
+            </button>
         </nav>
     </header>
 
@@ -57,7 +59,10 @@
           
             <div class="pacotes-grid">
                 <div class="pacote-card">
-                  <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 5 marmitas">
+                  <picture>
+                    <source type="image/webp" srcset="assets/prato1.webp" />
+                    <img src="assets/prato1.png" width="600" height="400" loading="lazy" decoding="async" alt="Pacote com cinco marmitas saudáveis" />
+                  </picture>
                   <h3>Plano Praticidade</h3><h4>5 marmitas (semanal)</h4>
                   <p>Ideal para garantir seus almoços saudáveis durante a semana.</p>
                   <span class="price">R$ 99,90</span>
@@ -66,7 +71,10 @@
             
                 <div class="pacote-card popular">
                   <span class="tag">Mais Popular</span>
-                  <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 10 marmitas">
+                  <picture>
+                    <source type="image/webp" srcset="assets/prato2.webp" />
+                    <img src="assets/prato2.png" width="600" height="400" loading="lazy" decoding="async" alt="Pacote com dez marmitas variadas" />
+                  </picture>
                   <h3>Plano Constância</h3><h4>10 marmitas (quinzenal)</h4>
                   <p>Economia e praticidade para duas semanas de alimentação equilibrada.</p>
                   <span class="price">R$ 189,90</span>
@@ -74,7 +82,10 @@
                 </div>
             
                 <div class="pacote-card">
-                  <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Pacote de 20 marmitas">
+                  <picture>
+                    <source type="image/webp" srcset="assets/prato3.webp" />
+                    <img src="assets/prato3.png" width="600" height="590" loading="lazy" decoding="async" alt="Pacote com vinte marmitas coloridas e nutritivas" />
+                  </picture>
                   <h3>Plano Equilíbrio</h3><h4>20 marmitas (mensal)</h4>
                   <p>A solução completa para um mês inteiro sem se preocupar com as refeições.</p>
                   <span class="price">R$ 359,90</span>
@@ -87,7 +98,10 @@
             <h2>Nossa História</h2>
             <div class="sobre-content">
                 <div class="sobre-foto">
-                    <img src="assets/perfil.png" alt="Foto da fundadora Ka">
+                    <picture>
+                        <source type="image/webp" srcset="assets/perfil.webp" />
+                        <img src="assets/perfil.png" width="600" height="955" loading="lazy" decoding="async" alt="Foto da fundadora Ka sorrindo" />
+                    </picture>
                 </div>
                 <div class="sobre-texto">
                     <h3>Feito com amor, por quem ama cozinhar</h3>
@@ -101,11 +115,23 @@
             <h2>Entre em Contato</h2>
             <div class="contato-wrapper">
                 <div class="contato-form">
-                    <form id="contactForm">
-                        <input type="text" name="name" placeholder="Seu Nome" required>
-                        <input type="email" name="email" placeholder="Seu E-mail" required>
-                        <input type="tel" name="phone" placeholder="Seu WhatsApp" required>
-                        <textarea name="message" rows="5" placeholder="Sua Mensagem" required></textarea>
+                    <form id="contactForm" novalidate>
+                        <label class="sr-only" for="contactName">Nome</label>
+                        <input type="text" id="contactName" name="name" placeholder="Seu Nome" required aria-describedby="contact-name-error">
+                        <span class="input-error" id="contact-name-error" role="alert" aria-live="polite"></span>
+
+                        <label class="sr-only" for="contactEmail">E-mail</label>
+                        <input type="email" id="contactEmail" name="email" placeholder="Seu E-mail" required aria-describedby="contact-email-error">
+                        <span class="input-error" id="contact-email-error" role="alert" aria-live="polite"></span>
+
+                        <label class="sr-only" for="contactPhone">WhatsApp</label>
+                        <input type="tel" id="contactPhone" name="phone" placeholder="Seu WhatsApp" required aria-describedby="contact-phone-error">
+                        <span class="input-error" id="contact-phone-error" role="alert" aria-live="polite"></span>
+
+                        <label class="sr-only" for="contactMessage">Mensagem</label>
+                        <textarea id="contactMessage" name="message" rows="5" placeholder="Sua Mensagem" required aria-describedby="contact-message-error"></textarea>
+                        <span class="input-error" id="contact-message-error" role="alert" aria-live="polite"></span>
+
                         <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
                     </form>
                 </div>
@@ -161,7 +187,7 @@
     </a>
 
     <footer>
-        <p>Criado com <i class="fas fa-heart"></i> por <a href="https://squadrockdev.com.br" target="_blank" rel="noopener noreferrer">Dev.Guirocha</a></p>
+        <p>Criado com <i class="fas fa-heart" aria-hidden="true"></i> por <a href="https://squadrockdev.com.br" target="_blank" rel="noopener noreferrer">Dev.Guirocha</a></p>
         <p>&copy; 2025 Marmitas da Ka. Todos os direitos reservados.</p>
     </footer>
 

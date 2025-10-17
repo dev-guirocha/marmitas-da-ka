@@ -20,6 +20,36 @@
     scroll-behavior: smooth;
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.input-error {
+    display: block;
+    font-size: 0.8rem;
+    color: #e74c3c;
+    margin: -10px 0 12px;
+    min-height: 16px;
+}
+
+.input-error:empty {
+    margin: 0 0 12px;
+}
+
+input.has-error,
+textarea.has-error,
+select.has-error {
+    border-color: #e74c3c !important;
+}
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -149,6 +179,9 @@ header {
     flex-direction: column;
     cursor: pointer;
     z-index: 1001;
+    background: transparent;
+    border: 0;
+    padding: 6px;
 }
 
 .hamburger span {
@@ -169,6 +202,11 @@ header {
 
 .hamburger.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -6px);
+}
+
+.hamburger:focus-visible {
+    outline: 2px solid var(--secondary-purple);
+    outline-offset: 4px;
 }
 
 .section-container {
@@ -278,6 +316,17 @@ h2::after {
     transform: translateY(-1px) scale(0.98);
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   }
+
+.btn[disabled],
+.btn.is-loading,
+button[disabled],
+button.is-loading {
+    opacity: 0.65;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+}
 
 .btn-primary {
     background-color: var(--primary-green);

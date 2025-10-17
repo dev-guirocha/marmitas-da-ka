@@ -9,8 +9,28 @@ const firebaseConfig = {
   measurementId: "SEU_MEASUREMENT_ID" // Opcional
 };
 
+const ALLOWED_ORIGINS = [
+  'https://seu-dominio.com',
+  'https://www.seu-dominio.com',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500'
+];
+
+if (typeof window !== 'undefined') {
+  const { origin } = window.location;
+  if (!ALLOWED_ORIGINS.includes(origin)) {
+    console.error(`[Firebase] Origem não autorizada (${origin}). Atualize ALLOWED_ORIGINS com os domínios liberados.`);
+    throw new Error('Origem não autorizada para o Firebase.');
+  }
+}
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+
+// Ative o App Check quando você obtiver a chave pública no console do Firebase
+if (typeof firebase !== 'undefined' && firebase?.appCheck && window?.__APP_CHECK_PUBLIC_KEY__) {
+  firebase.appCheck().activate(window.__APP_CHECK_PUBLIC_KEY__, true);
+}
 
 // Initialize and export Firebase services
 const auth = firebase.auth();
