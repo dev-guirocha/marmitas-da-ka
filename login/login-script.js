@@ -104,6 +104,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const forgotPasswordLink = qs('.forgot-password-link');
+    forgotPasswordLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        let email = (signInEmailEl?.value || '').trim();
+
+        if (!email || !isEmail(email)) {
+            const promptEmail = prompt('Informe o email cadastrado para recuperar a senha:') || '';
+            email = promptEmail.trim();
+
+            if (!email) {
+                showNotification('É necessário informar um email para recuperar a senha.', 'error');
+                return;
+            }
+
+            if (!isEmail(email)) {
+                showNotification('O email informado é inválido.', 'error');
+                return;
+            }
+
+            if (signInEmailEl) {
+                signInEmailEl.value = email;
+            }
+        }
+
+        showNotification('Enviando email de redefinição...', 'info');
+
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                showNotification('Email de redefinição enviado com sucesso!', 'success');
+            })
+            .catch((error) => {
+                console.error('Erro ao enviar redefinição de senha:', error.code, error.message);
+                if (error.code === 'auth/user-not-found') {
+                    showNotification('Não encontramos uma conta com esse email.', 'error');
+                } else {
+                    showNotification('Não foi possível enviar o email de redefinição.', 'error');
+                }
+            });
+    });
+
     // ===== Registo com Firebase =====
     if (signUpForm) {
         signUpForm.addEventListener('submit', (e) => {

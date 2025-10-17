@@ -13,6 +13,21 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentUser = null;
   let customerProfile = {};
   let userProfileLoaded = false;
+  let authReadyResolved = false;
+  let resolveAuthReady = () => {};
+  const authReady = new Promise((resolve) => {
+    resolveAuthReady = (value) => {
+      if (!authReadyResolved) {
+        authReadyResolved = true;
+        resolve(value);
+      }
+    };
+  });
+
+  const waitForAuth = (timeoutMs = 2500) => Promise.race([
+    authReady.then(() => 'resolved'),
+    new Promise((resolve) => setTimeout(() => resolve('timeout'), timeoutMs)),
+  ]);
 
   // ===== Endereço (persistência) - ATUALIZADO =====
   const ADDRESS_KEY = 'mdk_address_v1';
@@ -164,12 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const ensureAuthSession = () => {
     if (typeof auth === 'undefined' || !auth?.onAuthStateChanged) {
       userProfileLoaded = true;
+      resolveAuthReady(null);
       return;
     }
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         showNotification('Sua sessão expirou. Faça login novamente.', 'error');
+        resolveAuthReady(null);
         setTimeout(() => { window.location.href = PATH_LOGIN; }, 1800);
         return;
       }
@@ -184,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       customerProfile = { ...baseProfile };
       userProfileLoaded = true;
+      resolveAuthReady(user);
 
       if (typeof db === 'undefined' || !db?.collection) return;
 
@@ -387,7 +405,7 @@ cepInput?.addEventListener('blur', async (e) => {
   }
 });
   // ===== Formulário de entrega =====
-  deliveryForm?.addEventListener('submit', (e) => {
+  deliveryForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const requiredFields = ['cep', 'endereco', 'numero', 'bairro', 'delivery-time-select'];
@@ -415,9 +433,17 @@ cepInput?.addEventListener('blur', async (e) => {
       return;
     }
 
-    if (typeof auth !== 'undefined' && auth?.onAuthStateChanged && !currentUser) {
-      showNotification('Estamos carregando sua sessão. Tente novamente em instantes.', 'error');
-      return;
+    if (typeof auth !== 'undefined' && auth?.onAuthStateChanged) {
+      const authStatus = await waitForAuth();
+      if (!authReadyResolved && authStatus === 'timeout') {
+        showNotification('Estamos carregando sua sessão. Tente novamente em instantes.', 'error');
+        return;
+      }
+      if (!currentUser) {
+        showNotification('Sua sessão expirou. Faça login novamente.', 'error');
+        setTimeout(() => { window.location.href = PATH_LOGIN; }, 1800);
+        return;
+      }
     }
 
     // --- NOVO: LÓGICA PARA GUARDAR O PEDIDO ---

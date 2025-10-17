@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const WHATSAPP_NUMBER = '5579991428025';
+
     // Esconder tela de carregamento
     setTimeout(() => {
         const loadingScreen = document.getElementById('loadingScreen');
@@ -82,13 +84,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Simular envio do formulário
             const nameInput = this.querySelector('input[name="name"]');
-            if (nameInput) {
-                const name = nameInput.value;
-                alert(`Obrigado por sua mensagem, ${name}! Entraremos em contato em breve.`);
-            }
+            const emailInput = this.querySelector('input[name="email"]');
+            const phoneInput = this.querySelector('input[name="phone"]');
+            const messageInput = this.querySelector('textarea[name="message"]');
 
+            const name = nameInput?.value.trim() || 'Cliente';
+            const email = emailInput?.value.trim() || 'Não informado';
+            const phone = phoneInput?.value.trim() || 'Não informado';
+            const message = messageInput?.value.trim() || '';
+
+            const whatsappMessage = [
+                `Olá, Marmitas da Ka!`,
+                ``,
+                `Meu nome é ${name}.`,
+                `Email: ${email}`,
+                `WhatsApp: ${phone}`,
+                ``,
+                `Mensagem:`,
+                `${message}`
+            ].join('\n');
+
+            const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+            window.open(whatsappUrl, '_blank');
             this.reset();
         });
     }

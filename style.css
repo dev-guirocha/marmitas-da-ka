@@ -376,6 +376,11 @@ h2::after {
     transform: rotate(45deg);
     font-size: 0.9rem;
     font-weight: 600;
+    z-index: 2;
+}
+
+.pacote-card.popular {
+    overflow: visible;
 }
 
 #sobre {
@@ -393,12 +398,21 @@ h2::after {
     flex-wrap: wrap;
 }
 
+.sobre-foto {
+    width: clamp(260px, 35vw, 375px);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .sobre-foto img {
-    width: 250px;
-    height: 250px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 5px solid var(--light-purple);
+    object-position: center 25%;
+    border: 6px solid var(--light-purple);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
