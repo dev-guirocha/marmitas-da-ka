@@ -186,14 +186,13 @@
     border-color: #e74c3c;
 }
 .field-error {
-    display: block;
+    display: none;
     font-size: 0.8rem;
     color: #e74c3c;
-    margin: -10px 0 12px;
-    min-height: 16px;
 }
-.field-error:empty {
-    margin: 0 0 12px;
+.field-error:not(:empty) {
+    display: block;
+    margin: 4px 0 12px;
 }
 #delivery-form input:focus, #delivery-form textarea:focus, #delivery-form select:focus {
     border-color: var(--primary-green); outline: none;

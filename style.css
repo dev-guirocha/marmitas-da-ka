@@ -33,15 +33,14 @@
 }
 
 .input-error {
-    display: block;
+    display: none;
     font-size: 0.8rem;
     color: #e74c3c;
-    margin: -10px 0 12px;
-    min-height: 16px;
 }
 
-.input-error:empty {
-    margin: 0 0 12px;
+.input-error:not(:empty) {
+    display: block;
+    margin: 4px 0 12px;
 }
 
 input.has-error,
