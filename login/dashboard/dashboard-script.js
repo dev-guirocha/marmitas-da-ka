@@ -768,6 +768,8 @@ logoutBtn?.addEventListener('click', () => {
     let totalSlides = Math.max(1, Math.ceil(items.length / itemsPerView));
     let currentSlide = 0;
     let resizeRaf = null;
+    let isProgrammaticScroll = false;
+    let scrollTimeout = null;
 
     rebuildDots();
     updateUI();
@@ -784,6 +786,7 @@ logoutBtn?.addEventListener('click', () => {
     });
 
     slider.addEventListener('scroll', () => {
+      if (isProgrammaticScroll) return;
       if (!items.length) return;
       const scrollLeft = slider.scrollLeft;
       const targetIndex = items.reduce((closest, item, idx) => {
@@ -830,10 +833,20 @@ logoutBtn?.addEventListener('click', () => {
     }
 
     function goToSlide(index) {
-      currentSlide = Math.max(0, Math.min(index, totalSlides - 1));
+      const targetSlide = Math.max(0, Math.min(index, totalSlides - 1));
+      currentSlide = targetSlide;
       const targetItem = items[currentSlide * itemsPerView];
       if (targetItem) {
+        isProgrammaticScroll = true;
         slider.scrollTo({ left: targetItem.offsetLeft, behavior: 'smooth' });
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = window.setTimeout(() => {
+          isProgrammaticScroll = false;
+          scrollTimeout = null;
+          updateUI();
+        }, 400);
+      } else {
+        isProgrammaticScroll = false;
       }
       updateUI();
     }
