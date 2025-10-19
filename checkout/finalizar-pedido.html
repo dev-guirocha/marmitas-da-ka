@@ -15,42 +15,43 @@
 
     <div class="background-container">
         <div class="checkout-page-container" id="container">
-            <div class="form-container cart-container">
-                <div class="form-header">
-                    <h2><i class="fas fa-shopping-cart" aria-hidden="true"></i> Revise seu Pedido</h2>
-                </div>
-                <div class="form-content" id="cart-content">
-                    <div id="cart-summary"><p class="loading">Carregando seu carrinho...</p></div>
-                    <div class="cart-total">
-                        <strong>Total:</strong>
-                        <strong id="total-price">R$ 0,00</strong>
+            <div class="forms-wrapper">
+                <div class="form-container cart-container">
+                    <div class="form-header">
+                        <h2><i class="fas fa-shopping-cart" aria-hidden="true"></i> Revise seu Pedido</h2>
                     </div>
-                    <div class="payment-methods">
-                        <h3>Forma de Pagamento</h3>
-                        <div class="payment-options">
-                            <label class="payment-option" for="pix" data-method="pix">
-                                <input type="radio" id="pix" name="payment" value="pix" checked>
-                                <div class="payment-details">
-                                    <i class="fas fa-qrcode" aria-hidden="true"></i>
-                                    <span>PIX</span>
-                                    <small>Enviaremos a chave para o seu WhatsApp</small>
-                                </div>
-                            </label>
-                            <label class="payment-option" for="cash" data-method="cash">
-                                <input type="radio" id="cash" name="payment" value="cash">
-                                <div class="payment-details">
-                                    <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                                    <span>Dinheiro</span>
-                                    <small>Pague na entrega com troco se precisar</small>
-                                </div>
-                            </label>
+                    <div class="form-content" id="cart-content">
+                        <div id="cart-summary"><p class="loading">Carregando seu carrinho...</p></div>
+                        <div class="cart-total">
+                            <strong>Total:</strong>
+                            <strong id="total-price">R$ 0,00</strong>
+                        </div>
+                        <div class="payment-methods">
+                            <h3>Forma de Pagamento</h3>
+                            <div class="payment-options">
+                                <label class="payment-option" for="pix" data-method="pix">
+                                    <input type="radio" id="pix" name="payment" value="pix">
+                                    <div class="payment-details">
+                                        <i class="fas fa-qrcode" aria-hidden="true"></i>
+                                        <span>PIX</span>
+                                        <small>Enviaremos a chave para o seu WhatsApp</small>
+                                    </div>
+                                </label>
+                                <label class="payment-option" for="cash" data-method="cash">
+                                    <input type="radio" id="cash" name="payment" value="cash">
+                                    <div class="payment-details">
+                                        <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                                        <span>Dinheiro</span>
+                                        <small>Pague na entrega com troco se precisar</small>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-    
-            <div class="form-container delivery-container">
-                <form id="delivery-form">
+                </div>
+                <div class="form-container delivery-container">
+                    <form id="delivery-form">
                     <div class="form-header">
                         <h2><i class="fas fa-map-marker-alt" aria-hidden="true"></i> Dados da Entrega</h2>
                     </div>
@@ -58,7 +59,7 @@
                         <div class="delivery-notice">
                             <p>Entregas apenas em <strong>Aracaju, SE</strong>.</p>
                         </div>
-                        <div style="position: relative;">
+                        <div class="input-wrapper">
                             <label class="sr-only" for="cep">CEP</label>
                             <input type="tel" id="cep" placeholder="CEP" required maxlength="9" aria-describedby="error-cep">
                             <div id="cep-spinner" class="spinner hidden"></div>
@@ -70,12 +71,12 @@
                         <span class="field-error" id="error-endereco" role="alert" aria-live="polite"></span>
 
                         <div class="form-row">
-                            <div style="flex:1;">
+                            <div class="form-row-field">
                                 <label class="sr-only" for="numero">Número</label>
                                 <input type="text" id="numero" placeholder="Número" required aria-describedby="error-numero">
                                 <span class="field-error" id="error-numero" role="alert" aria-live="polite"></span>
                             </div>
-                            <div style="flex:1;">
+                            <div class="form-row-field">
                                 <label class="sr-only" for="bairro">Bairro</label>
                                 <input type="text" id="bairro" placeholder="Bairro" required aria-describedby="error-bairro">
                                 <span class="field-error" id="error-bairro" role="alert" aria-live="polite"></span>
@@ -84,9 +85,9 @@
                         <label class="sr-only" for="complemento">Complemento</label>
                         <input type="text" id="complemento" placeholder="Complemento (Apto, Bloco, etc.)" aria-describedby="error-complemento">
                         <span class="field-error" id="error-complemento" role="alert" aria-live="polite"></span>
-                        <div class="form-row" style="align-items: center; margin-bottom: 15px;">
-                            <input type="checkbox" id="save-address" name="save-address" style="width: auto;">
-                            <label for="save-address" style="margin-bottom: 0;">Guardar endereço para a próxima compra</label>
+                        <div class="form-row checkbox-row">
+                            <input type="checkbox" id="save-address" name="save-address">
+                            <label for="save-address">Guardar endereço para a próxima compra</label>
                         </div>
                         
                         <div class="delivery-time">
@@ -110,6 +111,7 @@
                         <button type="submit" class="btn btn-primary btn-large btn-finish-order">Finalizar Pedido</button>
                     </div>
                 </form>
+                </div>
             </div>
     
             <div class="overlay-container">

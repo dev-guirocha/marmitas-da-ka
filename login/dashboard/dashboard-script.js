@@ -90,8 +90,6 @@ logoutBtn?.addEventListener('click', () => {
     items: [],
   };
 
-  const userInfoDiv = document.querySelector('.user-info');
-  const cartInfoDiv = document.querySelector('.cart-info');
   const cartCountSpan = document.getElementById('cart-count');
   const cartTotalSpan = document.getElementById('cart-total');
   const clearCartBtn = document.getElementById('clearCartBtn');
@@ -460,18 +458,13 @@ logoutBtn?.addEventListener('click', () => {
   }
 
   function updateCartDisplay() {
-    if (Number(cart.packagePrice) > 0) {
-      userInfoDiv?.classList.add('hidden');
-      cartInfoDiv?.classList.remove('hidden');
+    const totalItems = cart.items.reduce((total, item) => total + Number(item.quantity || 0), 0);
+    updateCreditsBadge();
 
-      if (cartCountSpan) cartCountSpan.innerHTML = `<i class="fas fa-utensils"></i> ${cart.mealCredits}`;
-      if (cartTotalSpan) cartTotalSpan.innerText = `R$ ${Number(cart.totalPrice).toFixed(2).replace('.', ',')}`;
-      if (floatingCartCount) {
-        const count = cart.items.reduce((total, item) => total + Number(item.quantity || 0), 0);
-        floatingCartCount.textContent = String(count);
-      }
+    if (Number(cart.packagePrice) > 0) {
+      creditsBadge?.classList.remove('hidden');
+      if (floatingCartCount) floatingCartCount.textContent = String(totalItems);
       if (creditsCount) creditsCount.textContent = String(cart.mealCredits);
-      updateCreditsBadge();
 
       creditsInfo?.classList.remove('hidden');
       cartStatus?.classList.add('hidden');
@@ -486,14 +479,9 @@ logoutBtn?.addEventListener('click', () => {
         }
       }
     } else {
-      // Sem pacote: volta para a UI inicial
-      userInfoDiv?.classList.remove('hidden');
-      cartInfoDiv?.classList.add('hidden');
-
-      if (cartCountSpan) cartCountSpan.innerHTML = `<i class="fas fa-utensils"></i> 0`;
-      if (cartTotalSpan) cartTotalSpan.innerText = `R$ 0,00`;
+      creditsBadge?.classList.add('hidden');
+      if (floatingCartCount) floatingCartCount.textContent = '0';
       if (creditsCount) creditsCount.textContent = '0';
-      updateCreditsBadge?.();
 
       creditsInfo?.classList.add('hidden');
       cartStatus?.classList.remove('hidden');
@@ -502,8 +490,6 @@ logoutBtn?.addEventListener('click', () => {
 
     updateMenuItemQuantities();
     updateCartPreview();
-
-    // aplica desativação dos botões "+" conforme créditos
     managePlusButtonsState();
 
     try {

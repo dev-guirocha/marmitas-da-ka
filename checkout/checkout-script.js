@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // ===== Config =====
   const PATH_DASHBOARD = '../login/dashboard/dashboard.html';
   const PATH_LOGIN = '../login/login.html';
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
-  const waitForAuth = (timeoutMs = 2500) => Promise.race([
+  const waitForAuth = (timeoutMs = 3000) => Promise.race([ // Aumentei o timeout para 3s
     authReady.then(() => 'resolved'),
     new Promise((resolve) => setTimeout(() => resolve('timeout'), timeoutMs)),
   ]);
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bairro: document.getElementById('bairro'),
     complemento: document.getElementById('complemento'),
     deliveryTime: document.getElementById('delivery-time-select'),
-    saveAddressCheck: document.getElementById('save-address'), // ✅ NOVO
+    saveAddressCheck: document.getElementById('save-address'),
   };
 
   function loadSavedAddress() {
@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!raw) return;
     try {
       const data = JSON.parse(raw);
-      // ✅ NOVO: Só preenche se a opção 'save' estava ativa
       if (data.savePreference) {
         if (data.cep && addressFields.cep) addressFields.cep.value = data.cep;
         if (data.endereco && addressFields.endereco) addressFields.endereco.value = data.endereco;
@@ -61,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function saveAddress() {
-    // ✅ NOVO: Só guarda se a checkbox estiver marcada
     if (!addressFields.saveAddressCheck?.checked) {
         try { localStorage.removeItem(ADDRESS_KEY); } catch (_) {}
         return;
@@ -74,15 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
       bairro: addressFields.bairro?.value || '',
       complemento: addressFields.complemento?.value || '',
       deliveryTime: addressFields.deliveryTime?.value || '',
-      savePreference: addressFields.saveAddressCheck?.checked || false // ✅ NOVO
+      savePreference: addressFields.saveAddressCheck?.checked || false
     };
     try { localStorage.setItem(ADDRESS_KEY, JSON.stringify(payload)); } catch (_) {}
   }
 
-  // chama no boot para autopreencher
-  loadSavedAddress();
-
-  // salve automaticamente sempre que o utilizador mexer
+  // Não chama mais loadSavedAddress() aqui, será chamado no boot
+  
   Object.values(addressFields).forEach(el => {
     el?.addEventListener('change', saveAddress);
   });
@@ -115,7 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // aria-live para leitores de tela
   let live = qs('#live-region');
   if (!live) {
     live = document.createElement('div');
@@ -133,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
     n.className = `notification ${type}`;
     n.textContent = message;
 
-    // Fallback inline (caso CSS não exista)
     Object.assign(n.style, {
       position: 'fixed', top: '20px', right: '20px', padding: '15px 20px',
       borderRadius: '5px', color: '#fff', zIndex: '10000', opacity: '0',
@@ -159,13 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ===== Loading screen =====
-  setTimeout(() => {
-    const loadingScreen = qs('#loadingScreen');
+  // Removido o setTimeout(..., 1000) daqui
+  // O loading será controlado pela função de boot no final do arquivo
+  const loadingScreen = qs('#loadingScreen');
+  const hideLoadingScreen = () => {
     if (loadingScreen) {
       loadingScreen.style.opacity = '0';
       setTimeout(() => { loadingScreen.style.display = 'none'; }, 500);
     }
-  }, 1000);
+  };
 
   // ===== Elements =====
   const container         = qs('#container');
@@ -180,6 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const numeroInput       = qs('#numero');
   const complementoInput  = qs('#complemento');
   const deliverySelect    = qs('#delivery-time-select');
+  const paymentInputs     = qsa('input[name="payment"]');
+  const deliveryFormContainer = qs('.delivery-container'); // ✅ NOVO: Para o scroll
+  const finishOrderBtn    = qs('.btn-finish-order');
+  const spinner           = qs('#cep-spinner'); // ✅ NOVO: Definido aqui
+
   const fieldErrorEls = {
     cep: qs('#error-cep'),
     endereco: qs('#error-endereco'),
@@ -197,6 +198,30 @@ document.addEventListener('DOMContentLoaded', () => {
     complemento: complementoInput,
     delivery: deliverySelect,
   };
+  
+  // ===== LÓGICA DO FLIP/SCROLL AUTOMÁTICO (SUGESTÃO APLICADA) =====
+  paymentInputs.forEach((input) => {
+    input.addEventListener('change', () => {
+        if (!input.checked) return;
+
+        // Verifica a largura da tela no momento do clique
+        if (window.innerWidth > 768) {
+            // --- COMPORTAMENTO DESKTOP: Animação de Flip ---
+            setTimeout(() => {
+                container?.classList.add('right-panel-active');
+            }, 200); // 200 milissegundos
+            
+        } else {
+            // --- COMPORTAMENTO MOBILE: Scroll Suave ---
+            if (deliveryFormContainer) {
+                deliveryFormContainer.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+    });
+  });
 
   const setFieldError = (fieldKey, message) => {
     const inputEl = fieldInputs[fieldKey];
@@ -218,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventName = key === 'delivery' ? 'change' : 'input';
     inputEl.addEventListener(eventName, () => setFieldError(key, ''));
   });
-  const finishOrderBtn    = qs('.btn-finish-order');
 
   const getSelectedPaymentMethod = () => {
     const selected = document.querySelector('input[name="payment"]:checked');
@@ -237,10 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return base.toLocaleDateString('pt-BR');
   };
 
+  // ===== Sessão / Perfil =====
   const ensureAuthSession = () => {
     if (typeof auth === 'undefined' || !auth?.onAuthStateChanged) {
+      console.warn("Firebase Auth não está definida. Operando em modo offline.");
       userProfileLoaded = true;
-      resolveAuthReady(null);
+      resolveAuthReady(null); // Resolve como nulo (offline)
       return;
     }
 
@@ -262,25 +288,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
       customerProfile = { ...baseProfile };
       userProfileLoaded = true;
-      resolveAuthReady(user);
-
-      if (typeof db === 'undefined' || !db?.collection) return;
-
-      try {
-        const doc = await db.collection('users').doc(user.uid).get();
-        if (doc.exists) {
-          const data = doc.data() || {};
-          customerProfile = {
-            ...baseProfile,
-            ...data,
-            email: data.email || baseProfile.email,
-            phone: data.phone || baseProfile.phone,
-            name: data.name || baseProfile.name,
-          };
+      
+      // Tenta buscar perfil do Firestore, mas resolve o auth antes
+      if (typeof db !== 'undefined' && db?.collection) {
+        try {
+          const doc = await db.collection('users').doc(user.uid).get();
+          if (doc.exists) {
+            const data = doc.data() || {};
+            customerProfile = {
+              ...baseProfile,
+              ...data,
+              email: data.email || baseProfile.email,
+              phone: data.phone || baseProfile.phone,
+              name: data.name || baseProfile.name,
+            };
+          }
+        } catch (err) {
+          console.warn('Não foi possível carregar os dados do utilizador:', err);
         }
-      } catch (err) {
-        console.warn('Não foi possível carregar os dados do utilizador:', err);
       }
+      
+      // Resolve a promise de auth SÓ DEPOIS de ter o perfil básico
+      resolveAuthReady(user); 
     });
   };
 
@@ -291,13 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try { data = localStorage.getItem('marmitasCart'); } catch {}
     const parsed = data ? safeParse(data, null) : null;
 
-    // Normaliza estrutura
     cart = parsed && typeof parsed === 'object' ? parsed : {};
     cart.items = Array.isArray(cart.items) ? cart.items : [];
     cart.mealCredits = Number.isFinite(+cart.mealCredits) ? +cart.mealCredits : 0;
     cart.packagePrice = Number.isFinite(+cart.packagePrice) ? +cart.packagePrice : 0;
     cart.totalPrice = Number.isFinite(+cart.totalPrice) ? +cart.totalPrice
-                    : (Number.isFinite(+cart.packagePrice) ? +cart.packagePrice : 0); // fallback seguro
+                    : (Number.isFinite(+cart.packagePrice) ? +cart.packagePrice : 0);
   };
 
   const saveCart = () => {
@@ -364,7 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
     totalPriceEl.innerText = formatBRL(cart.totalPrice);
   };
 
-  // Delegação de eventos para +/-
   if (summaryContainer) {
     summaryContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-qty');
@@ -393,86 +420,78 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       }
-
-      // totalPrice permanece o preço do pacote (itens são “Incluso”)
       saveCart();
       renderCart();
     });
   }
 
-  // Navegação container
+  // Navegação container (Botões manuais)
   goToDeliveryBtn?.addEventListener('click', () => container?.classList.add('right-panel-active'));
   goToCartBtn?.addEventListener('click', () => container?.classList.remove('right-panel-active'));
 
   // ===== CEP / ViaCEP =====
-const clearAddressForm = () => {
-  if (enderecoInput) enderecoInput.value = '';
-  if (bairroInput)   bairroInput.value   = '';
-  setFieldError('endereco', '');
-  setFieldError('bairro', '');
-};
-
-// referência do spinner
-const spinner = qs('#cep-spinner');
-
-// Máscara do CEP
-cepInput?.addEventListener('input', (e) => {
-  let value = e.target.value.replace(/\D/g, '').slice(0, 8);
-  if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
-  e.target.value = value;
-});
-
-let cepController = null;
-
-cepInput?.addEventListener('blur', async (e) => {
-  const cep = e.target.value.replace(/\D/g, '');
-  if (!isCEP(cep)) { 
-    clearAddressForm(); 
-    setFieldError('cep', 'Digite um CEP válido com 8 dígitos.');
-    spinner?.classList.add('hidden'); 
-    return; 
-  }
-
-  setFieldError('cep', '');
-  if (enderecoInput) enderecoInput.value = 'Buscando...';
-  if (bairroInput)   bairroInput.value   = 'Buscando...';
-
-  // cancela requisição anterior
-  if (cepController) cepController.abort();
-  cepController = new AbortController();
-
-  // mostra spinner
-  spinner?.classList.remove('hidden');
-
-  try {
-    const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: cepController.signal });
-    const data = await resp.json();
-
-    if (!data || data.erro) {
-      clearAddressForm();
-      showNotification('CEP não encontrado. Por favor, verifique.', 'error');
-      setFieldError('cep', 'Não encontramos o CEP informado.');
-      return;
-    }
-
-    if (enderecoInput) enderecoInput.value = data.logradouro || '';
-    if (bairroInput)   bairroInput.value   = data.bairro || '';
+  const clearAddressForm = () => {
+    if (enderecoInput) enderecoInput.value = '';
+    if (bairroInput)   bairroInput.value   = '';
     setFieldError('endereco', '');
     setFieldError('bairro', '');
-    showNotification('Endereço preenchido!', 'success');
-    numeroInput?.focus();
-  } catch (err) {
-    if (err.name === 'AbortError') return; // usuário digitou / outro blur
-    clearAddressForm();
-    showNotification('Não foi possível buscar o CEP. Tente novamente.', 'error');
-    console.error('Erro ao buscar CEP:', err);
-    setFieldError('cep', 'Não foi possível buscar o CEP. Tente novamente.');
-  } finally {
-    // esconde spinner e limpa controller
-    spinner?.classList.add('hidden');
-    cepController = null;
-  }
-});
+  };
+
+  cepInput?.addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 8);
+    if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+    e.target.value = value;
+  });
+
+  let cepController = null;
+
+  cepInput?.addEventListener('blur', async (e) => {
+    const cep = e.target.value.replace(/\D/g, '');
+    if (!isCEP(cep)) { 
+      clearAddressForm(); 
+      setFieldError('cep', 'Digite um CEP válido com 8 dígitos.');
+      spinner?.classList.add('hidden'); 
+      return; 
+    }
+
+    setFieldError('cep', '');
+    if (enderecoInput) enderecoInput.value = 'Buscando...';
+    if (bairroInput)   bairroInput.value   = 'Buscando...';
+
+    if (cepController) cepController.abort();
+    cepController = new AbortController();
+
+    spinner?.classList.remove('hidden');
+
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: cepController.signal });
+      const data = await resp.json();
+
+      if (!data || data.erro) {
+        clearAddressForm();
+        showNotification('CEP não encontrado. Por favor, verifique.', 'error');
+        setFieldError('cep', 'Não encontramos o CEP informado.');
+        return;
+      }
+
+      if (enderecoInput) enderecoInput.value = data.logradouro || '';
+      if (bairroInput)   bairroInput.value   = data.bairro || '';
+      setFieldError('endereco', '');
+      setFieldError('bairro', '');
+      showNotification('Endereço preenchido!', 'success');
+      numeroInput?.focus();
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      clearAddressForm();
+      showNotification('Não foi possível buscar o CEP. Tente novamente.', 'error');
+      console.error('Erro ao buscar CEP:', err);
+      setFieldError('cep', 'Não foi possível buscar o CEP. Tente novamente.');
+    } finally {
+      spinner?.classList.add('hidden');
+      cepController = null;
+    }
+  });
+
   // ===== Formulário de entrega =====
   deliveryForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -519,12 +538,12 @@ cepInput?.addEventListener('blur', async (e) => {
       return;
     }
 
-    // Extra: garante que exista um pacote (defensivo)
     if (!cart || !cart.packageName) {
       showNotification('Seu carrinho está vazio ou sem pacote selecionado.', 'error');
       return;
     }
 
+    // A verificação de Auth agora é mais robusta
     if (typeof auth !== 'undefined' && auth?.onAuthStateChanged) {
       const authStatus = await waitForAuth();
       if (!authReadyResolved && authStatus === 'timeout') {
@@ -680,10 +699,36 @@ cepInput?.addEventListener('blur', async (e) => {
     }
   });
 
-  // ===== Sessão / Perfil =====
+  // ===== Boot (INICIALIZAÇÃO ATUALIZADA) =====
+  
+  // 1. Inicia a verificação de auth
   ensureAuthSession();
 
-  // ===== Boot =====
+  // 2. Espera pela verificação (com timeout)
+  const authStatus = await waitForAuth(3000); 
+
+  if (authStatus === 'timeout' && !currentUser) {
+      // Firebase demorou muito e não temos usuário
+      showNotification('Falha ao verificar sua sessão. Tente recarregar a página.', 'error');
+      // Esconde o loading de qualquer forma para não travar a tela
+      hideLoadingScreen();
+      // Não redireciona, mas o envio do form vai falhar e pedir login
+
+  } else if (!currentUser) {
+      // 'resolved' mas como nulo (ninguém logado)
+      // O próprio ensureAuthSession já deve ter mostrado notificação e iniciado o redirect
+      // A tela de loading vai sumir quando a página de login carregar
+      return; // Não faz mais nada, espera o redirect
+
+  }
+  
+  // 3. Se chegou aqui, temos um usuário (ou estamos offline)!
+  // Carregue o conteúdo principal
   loadCart();
   renderCart();
+  loadSavedAddress(); // Carrega o endereço salvo
+
+  // 4. Só agora esconda o loading principal
+  hideLoadingScreen();
+  
 });

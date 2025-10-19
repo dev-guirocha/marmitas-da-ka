@@ -151,6 +151,17 @@ document.addEventListener('DOMContentLoaded', () => {
     signUpButton?.addEventListener('click', () => container?.classList.add('right-panel-active'));
     signInButton?.addEventListener('click', () => container?.classList.remove('right-panel-active'));
 
+    document.querySelectorAll('.switch-button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.target;
+            if (target === 'signup') {
+                container?.classList.add('right-panel-active');
+            } else {
+                container?.classList.remove('right-panel-active');
+            }
+        });
+    });
+
     // ===== Login com Firebase =====
     if (signInForm) {
         signInForm.addEventListener('submit', (e) => {

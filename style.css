@@ -155,12 +155,24 @@ header {
     color: var(--secondary-purple);
 }
 
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .nav-actions .btn-login {
     background-color: transparent;
     border: 2px solid var(--primary-green);
     color: var(--primary-green);
-    padding: 8px 20px;
+    padding: 6px 18px;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
 .nav-actions .btn-login:hover {
@@ -170,7 +182,7 @@ header {
 }
 
 .nav-actions .btn-login i {
-    margin-right: 8px;
+    margin: 0;
 }
 
 .hamburger {
@@ -186,7 +198,7 @@ header {
 .hamburger span {
     width: 25px;
     height: 3px;
-    background-color: var(--dark-text);
+    background-color: var(--primary-green);
     margin: 3px 0;
     transition: all 0.3s ease;
 }
@@ -546,6 +558,8 @@ button.is-loading {
     color: var(--dark-text);
     text-decoration: none;
     transition: color 0.3s ease;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .contato-info a:hover {
@@ -698,6 +712,27 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 @media (max-width: 768px) {
+    .navbar {
+        gap: 14px;
+    }
+
+    .nav-actions .btn-login {
+        padding: 5px 14px;
+        font-size: 0.78rem;
+        border-width: 1px;
+    }
+
+    #inicio {
+        min-height: 100dvh;
+        padding: 120px 0 60px;
+    }
+
+    .hero-box {
+        max-width: 90%;
+        padding: 32px 24px;
+        text-align: center;
+    }
+
     .hero-box h1 {
         font-size: 2.2rem;
     }
@@ -709,11 +744,13 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
     .hero-buttons {
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
+        width: 100%;
     }
 
     .hero-buttons .btn {
-        margin: 5px 0;
+        margin: 0;
+        width: 100%;
     }
 
     .contato-wrapper {
@@ -742,12 +779,30 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
         font-size: 1.2rem;
     }
 
+    .nav-actions .btn-login {
+        padding: 4px 10px;
+        font-size: 0.72rem;
+    }
+
     .section-container {
         padding: 100px 5% 40px;
     }
 
     h2 {
         font-size: 2rem;
+    }
+
+    .hero-box {
+        width: 92%;
+        padding: 28px 18px;
+    }
+
+    .hero-box h1 {
+        font-size: 1.9rem;
+    }
+
+    .hero-box p {
+        font-size: 0.95rem;
     }
 
     .pacote-card {

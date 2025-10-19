@@ -25,19 +25,9 @@
                 <a href="../../index.html" class="mobile-only">Voltar para Home</a>
             </div>
             <div class="nav-actions">
-                <div class="user-info"><span id="user-info-name">Olá, Guirocha</span><button id="logoutBtn" class="btn-logout" tittle="Sair da conta">Sair</button></div>
-                <div class="cart-info hidden" style="display: flex; align-items: center; gap: 10px;">
-                    <a href="../../checkout/finalizar-pedido.html" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span id="cart-count">0</span>
-                        <span id="cart-total">R$ 0,00</span>
-                    </a>
-                
-                    <!-- ✅ NOVO: botão Esvaziar + badge de créditos -->
-                    <button id="clearCartBtn" class="btn-clear-cart" type="button" title="Esvaziar carrinho">
-                        Esvaziar
-                    </button>
-                    <span id="credits-badge" class="credits-badge">Créditos: 0</span>
+                <div class="user-info">
+                    <span id="user-info-name">Olá, Guirocha</span>
+                    <button id="logoutBtn" class="btn-logout" title="Sair da conta">Sair</button>
                 </div>
                 <a href="../../admin/admin.html" class="btn btn-secondary hidden admin-panel-link" id="adminLink">
                     <i class="fas fa-screwdriver-wrench"></i> Administração
@@ -234,6 +224,7 @@
             <div class="cart-preview-total">
                 Total: <span id="cart-preview-total">R$ 0,00</span>
             </div>
+            <button type="button" id="clearCartBtn" class="btn-link">Esvaziar carrinho</button>
             <a href="../../checkout/finalizar-pedido.html" class="btn btn-primary btn-small">Finalizar Compra</a>
         </div>
     </div>

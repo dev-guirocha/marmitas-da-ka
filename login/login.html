@@ -14,50 +14,60 @@
 <body class="login-page">
     <div class="page-container">
         <div class="container" id="container">
-            <div class="form-container sign-up-container">
-                <form action="#" id="signUpForm" novalidate>
-                    <h1>Criar Conta</h1>
-                    <span>Use o seu email para se registrar</span>
-                    
-                    <input type="text" id="signUpName" name="name" placeholder="Nome Completo" required />
-                    <span class="form-error-message" id="signUpName-error"></span>
+            <div class="forms-wrapper">
+                <div class="form-container sign-in-container">
+                    <form action="#" id="signInForm" novalidate>
+                        <h1>Iniciar Sessão</h1>
+                        <span>Use a sua conta</span>
 
-                    <input type="email" id="signUpEmail" name="email" placeholder="Email" required />
-                    <span class="form-error-message" id="signUpEmail-error"></span>
+                        <input type="email" id="signInEmail" name="email" placeholder="Email" required />
+                        <span class="form-error-message" id="signInEmail-error"></span>
+                        
+                        <input type="password" id="signInPassword" name="password" placeholder="Senha" required />
+                        <span class="form-error-message" id="signInPassword-error"></span>
+                        
+                        <div class="remember-me">
+                            <label>
+                                <input type="checkbox" name="remember"> Lembrar-me
+                            </label>
+                        </div>
 
-                    <input type="tel" id="signUpPhone" name="phone" placeholder="Celular" required />
-                    <span class="form-error-message" id="signUpPhone-error"></span>
+                        <button type="submit">Iniciar Sessão</button>
+                        
+                        <a href="#" class="forgot-password-link">Esqueceu sua senha?</a>
+                        <p class="mobile-switch">
+                            Ainda não tem conta?
+                            <button type="button" class="switch-button" data-target="signup">Cadastre-se</button>
+                        </p>
+                    </form>
+                </div>
 
-                    <input type="password" id="signUpPassword" name="password" placeholder="Senha" required minlength="8" />
-                    <span class="form-error-message" id="signUpPassword-error"></span>
-                    
-                    <button type="submit">Registrar</button>
-                </form>
+                <div class="form-container sign-up-container">
+                    <form action="#" id="signUpForm" novalidate>
+                        <h1>Criar Conta</h1>
+                        <span>Use o seu email para se registrar</span>
+                        
+                        <input type="text" id="signUpName" name="name" placeholder="Nome Completo" required />
+                        <span class="form-error-message" id="signUpName-error"></span>
+
+                        <input type="email" id="signUpEmail" name="email" placeholder="Email" required />
+                        <span class="form-error-message" id="signUpEmail-error"></span>
+
+                        <input type="tel" id="signUpPhone" name="phone" placeholder="Celular" required />
+                        <span class="form-error-message" id="signUpPhone-error"></span>
+
+                        <input type="password" id="signUpPassword" name="password" placeholder="Senha" required minlength="8" />
+                        <span class="form-error-message" id="signUpPassword-error"></span>
+                        
+                        <button type="submit">Registrar</button>
+                        <p class="mobile-switch">
+                            Já possui conta?
+                            <button type="button" class="switch-button" data-target="signin">Entrar</button>
+                        </p>
+                    </form>
+                </div>
             </div>
-    
-            <div class="form-container sign-in-container">
-                <form action="#" id="signInForm" novalidate>
-                    <h1>Iniciar Sessão</h1>
-                    <span>Use a sua conta</span>
 
-                    <input type="email" id="signInEmail" name="email" placeholder="Email" required />
-                    <span class="form-error-message" id="signInEmail-error"></span>
-                    
-                    <input type="password" id="signInPassword" name="password" placeholder="Senha" required />
-                    <span class="form-error-message" id="signInPassword-error"></span>
-                    
-                    <div class="remember-me">
-                        <label>
-                            <input type="checkbox" name="remember"> Lembrar-me
-                        </label>
-                    </div>
-
-                    <button type="submit">Iniciar Sessão</button>
-                    
-                    <a href="#" class="forgot-password-link">Esqueceu sua senha?</a>
-                </form>
-            </div>
-    
             <div class="overlay-container">
                 <div class="overlay">
                     <div class="overlay-panel overlay-left">

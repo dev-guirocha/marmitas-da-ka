@@ -1,3 +1,13 @@
+/* --- NOVA ESTRUTURA DE PÁGINA --- */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0; /* Garante que não haja margens no body */
+    background-color: #333; /* Fundo da página, visível abaixo do rodapé */
+}
+/* --- FIM DA NOVA ESTRUTURA --- */
+
 :root {
     --primary-green: #4CAF50;
     --secondary-purple: #8A2BE2;
@@ -19,12 +29,14 @@
 
 .background-container {
     background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=1887&auto=format&fit=crop') no-repeat center center/cover;
-    min-height: 100vh;
+    /* min-height: 100vh; */ /* <-- REMOVIDO */
+    flex-grow: 1; /* <-- ADICIONADO (Faz o container crescer) */
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 40px 20px;
     font-family: var(--font-family);
+    box-sizing: border-box; /* Garante que o padding não estoure */
 }
 
 .loading-screen {
@@ -39,15 +51,62 @@
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .checkout-page-container {
-    background-color: #fff; border-radius: 10px;
+    background-color: #fff;
+    border-radius: 10px;
     box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
-    position: relative; overflow: hidden; width: 100%; max-width: 900px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 900px;
     min-height: 620px;
+    perspective: 1800px;
+}
+
+.forms-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.75s ease;
+    z-index: 5;
+}
+
+.checkout-page-container.right-panel-active .forms-wrapper {
+    transform: rotateY(180deg);
 }
 
 .form-container {
-    position: absolute; top: 0; height: 100%;
-    transition: all 0.6s ease-in-out; display: flex; flex-direction: column;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s ease, opacity 0.6s ease;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-container {
+    transform: rotateY(0deg);
+    z-index: 2;
+    pointer-events: auto;
+}
+
+.delivery-container {
+    transform: rotateY(180deg);
+    pointer-events: none;
+}
+
+.checkout-page-container.right-panel-active .cart-container {
+    pointer-events: none;
+}
+
+.checkout-page-container.right-panel-active .delivery-container {
+    pointer-events: auto;
 }
 
 /* --- ESTILOS PARA BARRA DE ROLAGEM --- */
@@ -126,18 +185,27 @@
 .payment-methods { margin-top: 15px; }
 .payment-methods h3 { font-size: 1.2rem; margin-bottom: 15px; text-align: center; }
 .payment-options {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 .payment-option {
     position: relative;
     cursor: pointer;
+    flex: 1 1 140px; /* Tamanho base dos botões */
+    max-width: 260px;
 }
 .payment-option input[type="radio"] {
-    position: absolute; opacity: 0;
+    position: absolute;
+    opacity: 0;
 }
 .payment-details {
-    padding: 15px; border: 2px solid #eee; border-radius: 8px;
-    text-align: center; transition: all 0.3s ease;
+    padding: 18px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
     background: #fff;
     display: flex;
     flex-direction: column;
@@ -145,8 +213,10 @@
     gap: 6px;
 }
 .payment-details i {
-    font-size: 1.8rem; color: var(--primary-green);
-    margin-bottom: 8px; display: block;
+    font-size: 1.8rem;
+    color: var(--primary-green);
+    margin-bottom: 8px;
+    display: block;
 }
 .payment-details span { font-weight: 600; font-size: 1rem; }
 .payment-details small {
@@ -158,7 +228,7 @@
     border-color: var(--primary-green);
     background-color: #f0fff0;
     transform: translateY(-3px);
-    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+    box-shadow: 0 8px 18px rgba(76, 175, 80, 0.18);
 }
 .payment-option input[type="radio"]:checked + .payment-details small {
     color: var(--primary-green);
@@ -179,11 +249,34 @@
 #delivery-form input, #delivery-form textarea, #delivery-form select { 
     width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; 
     border: 1px solid #ccc; font-size: 1rem; transition: border-color 0.3s ease;
+    box-sizing: border-box; /* Garante padding correto */
 }
 #delivery-form input[aria-invalid="true"],
 #delivery-form textarea[aria-invalid="true"],
 #delivery-form select[aria-invalid="true"] {
     border-color: #e74c3c;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.form-row-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-row {
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.checkbox-row input {
+    width: auto;
+}
+.checkbox-row label {
+    margin-bottom: 0;
 }
 .field-error {
     display: none;
@@ -197,7 +290,7 @@
 #delivery-form input:focus, #delivery-form textarea:focus, #delivery-form select:focus {
     border-color: var(--primary-green); outline: none;
 }
-.form-row { display: flex; gap: 15px; }
+.form-row { display: flex; gap: 15px; flex-wrap: wrap; }
 .form-row input { width: 100%; }
 .btn-finish-order { width: 100%; margin-top: 10px; }
 .delivery-time h3 { font-size: 1.1rem; margin-bottom: 12px; }
@@ -290,13 +383,38 @@ button.ghost {
 button.ghost:hover { background-color: #FFFFFF; color: var(--primary-green); }
 
 /* --- FOOTER E BOTÕES --- */
+.btn-link {
+    background: none;
+    border: 0;
+    color: var(--secondary-purple);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+.btn-link:hover {
+    color: var(--primary-green);
+}
+.btn-link:focus-visible {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
+
 .btn-large {
     font-size: 1rem; font-weight: 700; padding: 15px 45px; text-transform: uppercase;
     border-radius: 50px; border: none;
 }
+
+/* --- ESTILO DO RODAPÉ (MODIFICADO) --- */
 .checkout-footer {
-    position: fixed; bottom: 0; left: 0; width: 100%;
-    text-align: center; padding: 15px;
+    /* Posição fixa foi removida */
+    width: 100%;
+    text-align: center;
+    padding: 25px;
+    background-color: #333; /* Fundo do rodapé */
+    box-sizing: border-box;
 }
 .checkout-footer a {
     color: rgba(255, 255, 255, 0.8); font-weight: 600; text-decoration: none;
@@ -304,23 +422,89 @@ button.ghost:hover { background-color: #FFFFFF; color: var(--primary-green); }
 }
 .checkout-footer a:hover { color: #FFFFFF; }
 
-/* --- RESPONSIVIDADE --- */
+/* --- RESPONSIVIDADE (BLOCO TOTALMENTE CORRIGIDO) --- */
 @media (max-width: 768px) {
+    
+    /* Padding reduzido no container de fundo */
+    .background-container {
+        padding: 20px 10px;
+        align-items: flex-start; /* Alinha no topo em telas pequenas */
+    }
+
     .checkout-page-container {
-        flex-direction: column; height: auto; min-height: 90vh; max-width: 500px;
+        min-height: auto;
+        max-width: 520px;
+        perspective: none; 
+        margin: 0; /* Remove margem extra dentro do background */
     }
+    
+    .overlay-container {
+        display: none;
+    }
+
+    .forms-wrapper {
+        position: relative;
+        width: 100%;
+        height: auto;
+        transform: none !important;
+        transform-style: flat;
+        transition: none;
+        z-index: 1;
+    }
+
     .form-container {
-        position: relative; width: 100%; height: auto;
-        opacity: 1; transform: none;
+        position: relative;
+        width: 100%;
+        height: auto;
+        opacity: 1 !important; 
+        transform: none !important;
+        z-index: auto !important;
+        pointer-events: auto !important;
+        backface-visibility: visible;
+        transition: none;
     }
+    
+    .checkout-page-container.right-panel-active .forms-wrapper,
     .checkout-page-container.right-panel-active .cart-container,
-    .checkout-page-container.right-panel-active .delivery-container { transform: none; }
-    .overlay-container { display: none; }
-    .form-row { flex-direction: column; gap: 0; }
-    .payment-options { grid-template-columns: 1fr; }
+    .checkout-page-container.right-panel-active .delivery-container {
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    .form-content {
+        padding: 20px 25px;
+    }
+    .form-header {
+        padding: 20px 25px 10px;
+    }
+    .cart-total {
+        padding: 20px 25px;
+    }
 }
 
-/* --- NOVO: Estilos do Spinner do CEP --- */
+/* --- ESTILO PARA BOTÃO EM LOADING --- */
+.btn-large.is-loading {
+    position: relative;
+    color: transparent !important; 
+    cursor: wait;
+}
+
+.btn-large.is-loading::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -12px;
+    margin-top: -12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #FFFFFF;
+    animation: spin 0.8s linear infinite;
+}
+
+/* --- Estilos do Spinner do CEP --- */
 .spinner {
     position: absolute;
     top: 50%;
@@ -336,11 +520,4 @@ button.ghost:hover { background-color: #FFFFFF; color: var(--primary-green); }
 
 .spinner.hidden {
     display: none;
-}
-
-/* A animação 'spin' */
-@keyframes spin {
-    to {
-        transform: translateY(-50%) rotate(360deg);
-    }
 }
