@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ua = navigator.userAgent || navigator.vendor || '';
     const isInAppBrowser = /Instagram|FBAN|FBAV|Line|Twitter|Snapchat|Messenger/i.test(ua);
     const simpleLayoutClass = 'simple-login';
-    const viewportSimpleQuery = window.matchMedia('(max-width: 820px)');
+    const viewportSimpleQuery = window.matchMedia('(max-width: 768px)');
 
     const syncSimpleLayout = () => {
         if (isInAppBrowser || viewportSimpleQuery.matches) {

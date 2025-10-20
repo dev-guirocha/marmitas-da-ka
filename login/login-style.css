@@ -237,6 +237,7 @@ body.in-app-browser .container,
 body.simple-login .container {
     perspective: none;
     overflow: visible;
+    min-height: auto;
 }
 body.in-app-browser .overlay-container,
 body.simple-login .overlay-container {
@@ -261,6 +262,7 @@ body.simple-login .form-container {
     backface-visibility: visible;
     pointer-events: auto !important;
     display: none;
+    padding: 40px 0;
 }
 body.in-app-browser .sign-in-container,
 body.simple-login .sign-in-container {
@@ -282,16 +284,65 @@ body.in-app-browser .mobile-switch,
 body.simple-login .mobile-switch {
     display: block;
 }
+body.in-app-browser form,
+body.simple-login form {
+    padding: 0 25px;
+    max-width: 420px;
+    height: auto;
+}
+body.in-app-browser h1,
+body.simple-login h1 {
+    font-size: 1.6rem;
+}
 
 @media (max-width: 768px) {
-    .overlay-container { display: none; }
+    .container {
+        min-height: auto;
+        perspective: none;
+    }
+    .overlay-container {
+        display: none;
+    }
     .forms-wrapper {
+        position: relative;
         width: 100%;
-        left: 0;
+        height: auto;
+        transform: none !important;
+        transform-style: flat;
+        perspective: none;
+        transition: none;
+        z-index: 1;
+    }
+    .form-container {
+        position: relative;
+        width: 100%;
+        height: auto;
+        opacity: 1 !important;
+        transform: none !important;
+        z-index: auto !important;
+        pointer-events: auto !important;
+        backface-visibility: visible;
+        display: none;
+        padding: 40px 0;
+    }
+    .sign-in-container {
+        display: flex;
+    }
+    .container.right-panel-active .sign-in-container {
+        display: none;
+    }
+    .container.right-panel-active .sign-up-container {
+        display: flex;
     }
     form {
-        padding: 0 30px;
+        padding: 0 25px;
         max-width: 420px;
+        height: auto;
     }
-    .mobile-switch { display: block; }
+    h1 {
+        font-size: 1.6rem;
+    }
+    .mobile-switch {
+        display: block;
+    }
 }
