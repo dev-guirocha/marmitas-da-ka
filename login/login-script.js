@@ -156,6 +156,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
+    const describeFirebaseState = () => {
+        const details = [];
+        if (typeof firebase === 'undefined') details.push('firebase SDK indisponível');
+        if (typeof firebase !== 'undefined' && !firebase.apps?.length) details.push('firebase não inicializado');
+        if (typeof auth === 'undefined') details.push('auth não definido');
+        if (typeof db === 'undefined') details.push('db não definido');
+        return details;
+    };
+
+    const ensureFirebaseReady = () => {
+        const problems = describeFirebaseState();
+        if (!problems.length) return true;
+        const message = problems.join(' | ');
+        console.error('[Login] Firebase indisponível:', message);
+        showNotification(`Não foi possível carregar o Firebase (${message}). Recarregue a página e tente novamente.`, 'error');
+        return false;
+    };
+
     // ===== Lógica da Página =====
     const urlParams = new URLSearchParams(window.location.search);
     const selectedPackage = urlParams.get('package');
@@ -235,6 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            if (!ensureFirebaseReady()) {
+                return;
+            }
+
             setButtonLoading(signInSubmitBtn, true, 'Entrando...');
             let shouldUnlockButton = true;
 
@@ -249,7 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                         showNotification('Email ou senha inválidos.', 'error');
                     } else {
-                        showNotification('Ocorreu um erro ao tentar fazer login.', 'error');
+                        const codeSuffix = error?.code ? ` (código: ${String(error.code).replace('auth/', '')})` : '';
+                        showNotification(`Ocorreu um erro ao tentar fazer login${codeSuffix}.`, 'error');
                     }
                 })
                 .finally(() => {
@@ -286,6 +309,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resetInProgress = true;
         setLinkLoading(forgotPasswordLink, true, 'Enviando...');
+
+        if (!ensureFirebaseReady()) {
+            resetInProgress = false;
+            setLinkLoading(forgotPasswordLink, false);
+            return;
+        }
 
         auth.sendPasswordResetEmail(email)
             .then(() => {
@@ -362,6 +391,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            if (!ensureFirebaseReady()) {
+                return;
+            }
+
             setButtonLoading(signUpSubmitBtn, true, 'Criando conta...');
             let shouldUnlockButton = true;
 
@@ -385,7 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (error.code === 'auth/email-already-in-use') {
                         showNotification('Este email já está a ser utilizado.', 'error');
                     } else {
-                        showNotification('Ocorreu um erro ao criar a conta.', 'error');
+                        const codeSuffix = error?.code ? ` (código: ${String(error.code).replace('auth/', '')})` : '';
+                        showNotification(`Ocorreu um erro ao criar a conta${codeSuffix}.`, 'error');
                     }
                 })
                 .finally(() => {
