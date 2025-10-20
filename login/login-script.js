@@ -174,6 +174,94 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     };
 
+    let persistencePromise = null;
+    const isStorageRelatedError = (error) => {
+        const code = String(error?.code || '');
+        return code === 'auth/web-storage-unsupported' || code === 'auth/internal-error';
+    };
+
+    const fallbackToNonePersistence = async () => {
+        if (!ensureFirebaseReady()) return false;
+        if (!auth?.setPersistence || !firebase?.auth?.Auth?.Persistence?.NONE) return false;
+        try {
+            await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+            showNotification('Seu navegador tem restrições. O login será temporário neste dispositivo.', 'info');
+            return true;
+        } catch (err) {
+            console.warn('[Login] Falha ao definir persistência NONE:', err);
+            return false;
+        }
+    };
+
+    const configureAuthPersistence = () => {
+        if (persistencePromise) return persistencePromise;
+        persistencePromise = (async () => {
+            if (!ensureFirebaseReady()) throw new Error('Firebase indisponível');
+            if (!auth?.setPersistence || !firebase?.auth?.Auth?.Persistence) {
+                console.warn('[Login] SDK não suporta configuração de persistência.');
+                return null;
+            }
+            const { LOCAL, SESSION, NONE } = firebase.auth.Auth.Persistence;
+            const desired = isInAppBrowser && SESSION ? SESSION : LOCAL;
+            try {
+                if (desired) {
+                    await auth.setPersistence(desired);
+                    console.info(`[Login] Persistência configurada (${desired}).`);
+                    return desired;
+                }
+                return null;
+            } catch (err) {
+                console.warn('[Login] Persistência preferida indisponível. Tentando NONE.', err);
+                if (NONE) {
+                    await auth.setPersistence(NONE);
+                    showNotification('Seu navegador não permite salvar sessão. Prosseguiremos sem lembrar o login.', 'info');
+                    return NONE;
+                }
+                throw err;
+            }
+        })();
+        return persistencePromise;
+    };
+
+    const signInWithFallback = async (email, password) => {
+        await configureAuthPersistence();
+        let attempt = 0;
+        // Tentativa normal + 1 fallback (NONE)
+        while (attempt < 2) {
+            try {
+                return await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                if (attempt === 0 && isStorageRelatedError(error)) {
+                    const fallbackApplied = await fallbackToNonePersistence();
+                    if (fallbackApplied) {
+                        attempt += 1;
+                        continue;
+                    }
+                }
+                throw error;
+            }
+        }
+    };
+
+    const createUserWithFallback = async (email, password) => {
+        await configureAuthPersistence();
+        let attempt = 0;
+        while (attempt < 2) {
+            try {
+                return await auth.createUserWithEmailAndPassword(email, password);
+            } catch (error) {
+                if (attempt === 0 && isStorageRelatedError(error)) {
+                    const fallbackApplied = await fallbackToNonePersistence();
+                    if (fallbackApplied) {
+                        attempt += 1;
+                        continue;
+                    }
+                }
+                throw error;
+            }
+        }
+    };
+
     // ===== Lógica da Página =====
     const urlParams = new URLSearchParams(window.location.search);
     const selectedPackage = urlParams.get('package');
@@ -222,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== Login com Firebase =====
     if (signInForm) {
-        signInForm.addEventListener('submit', (e) => {
+        signInForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = (signInEmailEl?.value || '').trim();
             const password = signInPasswordEl?.value || '';
@@ -253,33 +341,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (!ensureFirebaseReady()) {
-                return;
-            }
-
             setButtonLoading(signInSubmitBtn, true, 'Entrando...');
-            let shouldUnlockButton = true;
+            try {
+                if (!ensureFirebaseReady()) {
+                    return;
+                }
 
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    shouldUnlockButton = false;
-                    showNotification(`Bem-vindo(a) de volta!`, 'success');
-                    setTimeout(() => redirect('dashboard/dashboard.html'), 1500);
-                })
-                .catch((error) => {
-                    console.error("Erro de login:", error.code, error.message);
-                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                        showNotification('Email ou senha inválidos.', 'error');
-                    } else {
-                        const codeSuffix = error?.code ? ` (código: ${String(error.code).replace('auth/', '')})` : '';
-                        showNotification(`Ocorreu um erro ao tentar fazer login${codeSuffix}.`, 'error');
-                    }
-                })
-                .finally(() => {
-                    if (shouldUnlockButton) {
-                        setButtonLoading(signInSubmitBtn, false);
-                    }
-                });
+                const credentials = await signInWithFallback(email, password);
+                console.info('[Login] Utilizador autenticado:', credentials?.user?.uid);
+                showNotification('Bem-vindo(a) de volta!', 'success');
+                setTimeout(() => redirect('dashboard/dashboard.html'), 1500);
+            } catch (error) {
+                console.error('Erro de login:', error?.code, error?.message);
+                if (error?.code === 'auth/user-not-found' || error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential') {
+                    showNotification('Email ou senha inválidos.', 'error');
+                } else {
+                    const codeSuffix = error?.code ? ` (código: ${String(error.code).replace('auth/', '')})` : '';
+                    const hint = isInAppBrowser ? ' Confira se está com internet e tente abrir no navegador externo.' : '';
+                    showNotification(`Ocorreu um erro ao tentar fazer login${codeSuffix}.${hint}`, 'error');
+                }
+            } finally {
+                setButtonLoading(signInSubmitBtn, false);
+            }
         });
     }
 
@@ -336,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== Registo com Firebase =====
     if (signUpForm) {
-        signUpForm.addEventListener('submit', (e) => {
+        signUpForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const nameVal = (signUpNameEl?.value || '').trim();
             const emailVal = (signUpEmailEl?.value || '').trim();
@@ -391,42 +474,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (!ensureFirebaseReady()) {
-                return;
-            }
-
             setButtonLoading(signUpSubmitBtn, true, 'Criando conta...');
-            let shouldUnlockButton = true;
+            try {
+                if (!ensureFirebaseReady()) {
+                    return;
+                }
 
-            auth.createUserWithEmailAndPassword(emailVal, pwdVal)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    showNotification(`Conta para ${nameVal.split(' ')[0]} criada com sucesso!`, 'success');
-                    return db.collection('users').doc(user.uid).set({
-                        name: nameVal,
-                        email: emailVal,
-                        phone: formattedPhone,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                })
-                .then(() => {
-                    shouldUnlockButton = false;
-                    setTimeout(() => redirect('dashboard/dashboard.html'), 1500);
-                })
-                .catch((error) => {
-                    console.error("Erro de registo:", error.code, error.message);
-                    if (error.code === 'auth/email-already-in-use') {
-                        showNotification('Este email já está a ser utilizado.', 'error');
-                    } else {
-                        const codeSuffix = error?.code ? ` (código: ${String(error.code).replace('auth/', '')})` : '';
-                        showNotification(`Ocorreu um erro ao criar a conta${codeSuffix}.`, 'error');
-                    }
-                })
-                .finally(() => {
-                    if (shouldUnlockButton) {
-                        setButtonLoading(signUpSubmitBtn, false);
-                    }
+                const credential = await createUserWithFallback(emailVal, pwdVal);
+                const user = credential?.user;
+                showNotification(`Conta para ${nameVal.split(' ')[0]} criada com sucesso!`, 'success');
+                await db.collection('users').doc(user.uid).set({
+                    name: nameVal,
+                    email: emailVal,
+                    phone: formattedPhone,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                setTimeout(() => redirect('dashboard/dashboard.html'), 1500);
+            } catch (error) {
+                console.error('Erro de registo:', error?.code, error?.message);
+                if (error?.code === 'auth/email-already-in-use') {
+                    showNotification('Este email já está a ser utilizado.', 'error');
+                } else {
+                    const codeSuffix = error?.code ? ` (código: ${String(error.code).replace('auth/', '')})` : '';
+                    const hint = isInAppBrowser ? ' Tente novamente ou abra no navegador externo.' : '';
+                    showNotification(`Ocorreu um erro ao criar a conta${codeSuffix}.${hint}`, 'error');
+                }
+            } finally {
+                setButtonLoading(signUpSubmitBtn, false);
+            }
+        });
+    }
+
+    if (typeof firebase !== 'undefined' && typeof auth !== 'undefined') {
+        configureAuthPersistence().catch((err) => {
+            console.warn('[Login] Não foi possível configurar a persistência inicial:', err);
         });
     }
 });
