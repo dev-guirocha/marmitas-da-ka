@@ -6,6 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const ua = navigator.userAgent || navigator.vendor || '';
     const isInAppBrowser = /Instagram|FBAN|FBAV|Line|Twitter|Snapchat|Messenger/i.test(ua);
+    const simpleLayoutClass = 'simple-login';
+    const viewportSimpleQuery = window.matchMedia('(max-width: 820px)');
+
+    const syncSimpleLayout = () => {
+        if (isInAppBrowser || viewportSimpleQuery.matches) {
+            document.body.classList.add(simpleLayoutClass);
+        } else {
+            document.body.classList.remove(simpleLayoutClass);
+        }
+    };
+    syncSimpleLayout();
+    if (viewportSimpleQuery.addEventListener) {
+        viewportSimpleQuery.addEventListener('change', syncSimpleLayout);
+    } else if (viewportSimpleQuery.addListener) {
+        viewportSimpleQuery.addListener(syncSimpleLayout);
+    }
     if (isInAppBrowser) {
         document.body.classList.add('in-app-browser');
 
