@@ -13,9 +13,13 @@
 
 <body class="login-page">
     <div class="page-container">
-        <div class="container" id="container">
+        <div class="container" id="container" data-view="signin">
+            <div class="form-tabs" role="tablist">
+                <button type="button" class="form-tab is-active" data-target="signin" aria-controls="signInForm">Entrar</button>
+                <button type="button" class="form-tab" data-target="signup" aria-controls="signUpForm">Cadastrar</button>
+            </div>
             <div class="forms-wrapper">
-                <div class="form-container sign-in-container">
+                <div class="form-container sign-in-container is-active">
                     <form action="#" id="signInForm" novalidate>
                         <h1>Iniciar Sessão</h1>
                         <span>Use a sua conta</span>
@@ -65,21 +69,6 @@
                             <button type="button" class="switch-button" data-target="signin">Entrar</button>
                         </p>
                     </form>
-                </div>
-            </div>
-
-            <div class="overlay-container">
-                <div class="overlay">
-                    <div class="overlay-panel overlay-left">
-                        <h1>Bem-vindo(a) de Volta!</h1>
-                        <p>Para se manter conectado connosco, por favor, inicie sessão com os seus dados pessoais.</p>
-                        <button class="ghost" id="signIn">Iniciar Sessão</button>
-                    </div>
-                    <div class="overlay-panel overlay-right">
-                        <h1>Olá, Amigo(a)!</h1>
-                        <p>Insira os seus dados e comece a sua jornada de alimentação saudável connosco.</p>
-                        <button class="ghost" id="signUp">Registrar</button>
-                    </div>
                 </div>
             </div>
         </div>

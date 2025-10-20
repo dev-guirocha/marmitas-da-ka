@@ -1,64 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ===== Helpers =====
     const qs = (sel, el = document) => el.querySelector(sel);
+    const qsa = (sel, el = document) => Array.from(el.querySelectorAll(sel));
     const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).toLowerCase());
     const redirect = (url) => { window.location.href = url; };
 
     const ua = navigator.userAgent || navigator.vendor || '';
     const isInAppBrowser = /Instagram|FBAN|FBAV|Line|Twitter|Snapchat|Messenger/i.test(ua);
-    const simpleLayoutClass = 'simple-login';
-    const viewportSimpleQuery = window.matchMedia('(max-width: 768px)');
-
-    const syncSimpleLayout = () => {
-        if (isInAppBrowser || viewportSimpleQuery.matches) {
-            document.body.classList.add(simpleLayoutClass);
-        } else {
-            document.body.classList.remove(simpleLayoutClass);
-        }
-    };
-    syncSimpleLayout();
-    if (viewportSimpleQuery.addEventListener) {
-        viewportSimpleQuery.addEventListener('change', syncSimpleLayout);
-    } else if (viewportSimpleQuery.addListener) {
-        viewportSimpleQuery.addListener(syncSimpleLayout);
-    }
-    if (isInAppBrowser) {
-        document.body.classList.add('in-app-browser');
-
-        const container = qs('#container');
-        const formsWrapper = qs('.forms-wrapper');
-        const overlayContainer = qs('.overlay-container');
-        const mobileSwitches = document.querySelectorAll('.mobile-switch');
-
-        container?.classList.remove('right-panel-active');
-        container?.style.setProperty('perspective', 'none');
-        container?.style.setProperty('overflow', 'visible');
-
-        if (overlayContainer?.parentNode) {
-            overlayContainer.parentNode.removeChild(overlayContainer);
-        }
-
-        if (formsWrapper) {
-            formsWrapper.style.setProperty('position', 'relative');
-            formsWrapper.style.setProperty('width', '100%');
-            formsWrapper.style.setProperty('height', 'auto');
-            formsWrapper.style.setProperty('transform', 'none');
-            formsWrapper.style.setProperty('transform-style', 'flat');
-            formsWrapper.style.setProperty('z-index', 'auto');
-        }
-
-        document.querySelectorAll('.form-container').forEach((el) => {
-            el.style.setProperty('position', 'relative');
-            el.style.setProperty('width', '100%');
-            el.style.setProperty('height', 'auto');
-            el.style.setProperty('opacity', '1');
-            el.style.setProperty('transform', 'none');
-            el.style.setProperty('backface-visibility', 'visible');
-            el.style.setProperty('pointer-events', 'auto');
-        });
-
-        mobileSwitches.forEach((el) => el.style.setProperty('display', 'block'));
-    }
 
     // Funções para mostrar/limpar erros e notificações
     const showFieldError = (inputEl, message) => {
@@ -285,11 +233,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try { localStorage.setItem('selectedPackage', selectedPackage); } catch (_) {}
     }
 
-    const signUpButton = qs('#signUp');
-    const signInButton = qs('#signIn');
     const container = qs('#container');
     const signInForm = qs('#signInForm');
     const signUpForm = qs('#signUpForm');
+    const formTabs = qsa('.form-tab');
+    const formPanels = qsa('.form-container');
+    const switchButtons = qsa('.switch-button');
 
     const signInEmailEl = qs('#signInEmail', signInForm);
     const signInPasswordEl = qs('#signInPassword', signInForm);
@@ -310,18 +259,33 @@ document.addEventListener('DOMContentLoaded', () => {
         event.target.value = formatPhone(event.target.value);
     });
 
-    signUpButton?.addEventListener('click', () => container?.classList.add('right-panel-active'));
-    signInButton?.addEventListener('click', () => container?.classList.remove('right-panel-active'));
-
-    document.querySelectorAll('.switch-button').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const target = btn.dataset.target;
-            if (target === 'signup') {
-                container?.classList.add('right-panel-active');
-            } else {
-                container?.classList.remove('right-panel-active');
-            }
+    const setActiveView = (view, { focus = true } = {}) => {
+        if (!container) return;
+        const normalized = view === 'signup' ? 'signup' : 'signin';
+        container.dataset.view = normalized;
+        formPanels.forEach((panel) => {
+            const panelView = panel.classList.contains('sign-up-container') ? 'signup' : 'signin';
+            panel.classList.toggle('is-active', panelView === normalized);
         });
+        formTabs.forEach((tab) => {
+            tab.classList.toggle('is-active', tab.dataset.target === normalized);
+        });
+
+        if (focus) {
+            const focusTarget = normalized === 'signup' ? signUpNameEl : signInEmailEl;
+            focusTarget?.focus();
+        }
+    };
+
+    const initialView = container?.dataset.view || 'signin';
+    setActiveView(initialView, { focus: false });
+
+    formTabs.forEach((tab) => {
+        tab.addEventListener('click', () => setActiveView(tab.dataset.target));
+    });
+
+    switchButtons.forEach((btn) => {
+        btn.addEventListener('click', () => setActiveView(btn.dataset.target));
     });
 
     // ===== Login com Firebase =====
