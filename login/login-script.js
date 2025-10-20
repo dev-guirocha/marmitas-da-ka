@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).toLowerCase());
     const redirect = (url) => { window.location.href = url; };
 
+    const ua = navigator.userAgent || navigator.vendor || '';
+    const isInAppBrowser = /Instagram|FBAN|FBAV|Line|Twitter|Snapchat|Messenger/i.test(ua);
+    if (isInAppBrowser) {
+        document.body.classList.add('in-app-browser');
+    }
+
     // Funções para mostrar/limpar erros e notificações
     const showFieldError = (inputEl, message) => {
         if (!inputEl) return;

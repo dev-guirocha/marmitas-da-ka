@@ -232,6 +232,46 @@ button.is-loading {
 footer { padding: 20px 0; text-align: center; }
 footer a { color: white; text-decoration: none; }
 
+/* --- Ajustes para navegadores in-app (ex: Instagram) --- */
+body.in-app-browser .container {
+    perspective: none;
+}
+body.in-app-browser .overlay-container {
+    display: none !important;
+}
+body.in-app-browser .forms-wrapper {
+    position: relative;
+    width: 100%;
+    height: auto;
+    transform: none !important;
+    transform-style: flat;
+}
+body.in-app-browser .form-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    opacity: 1 !important;
+    transform: none !important;
+    backface-visibility: visible;
+    pointer-events: auto !important;
+    display: none;
+}
+body.in-app-browser .sign-in-container {
+    display: flex !important;
+}
+body.in-app-browser .container.right-panel-active .sign-in-container {
+    display: none !important;
+}
+body.in-app-browser .sign-up-container {
+    display: none !important;
+}
+body.in-app-browser .container.right-panel-active .sign-up-container {
+    display: flex !important;
+}
+body.in-app-browser .mobile-switch {
+    display: block;
+}
+
 @media (max-width: 768px) {
     .overlay-container { display: none; }
     .forms-wrapper {
