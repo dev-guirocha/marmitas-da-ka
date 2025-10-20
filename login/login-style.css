@@ -12,26 +12,68 @@
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     background: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
                 url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=2070&auto=format&fit=crop')
                 no-repeat center center / cover;
     font-family: var(--font-family);
-    min-height: 100vh;
+    min-height: 100%;
+    min-width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 32px;
     margin: 0;
+    overflow-y: auto;
+    -webkit-font-smoothing: antialiased;
+}
+
+body.in-app-browser {
+    background: #f3f4f6;
+    padding: 24px;
 }
 
 .page-container {
     width: 100%;
-    max-width: 440px;
+    max-width: 460px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
+    margin: 0 auto;
+}
+
+.brand {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #fff;
+    text-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.brand .logo-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.16);
+    display: grid;
+    place-items: center;
+    font-size: 1.3rem;
+}
+
+.brand strong {
+    font-size: 1.2rem;
+    letter-spacing: 0.5px;
+}
+
+.brand small {
+    font-size: 0.85rem;
+    opacity: 0.85;
 }
 
 .form-card {
@@ -39,7 +81,7 @@ body {
     background: #fff;
     border-radius: var(--card-radius);
     box-shadow: var(--card-shadow);
-    padding: 36px 32px;
+    padding: 40px 36px;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -53,7 +95,7 @@ body {
 }
 
 .form-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.95rem;
     font-weight: 700;
     color: #1f2937;
 }
@@ -211,16 +253,94 @@ input:focus {
     text-decoration: underline;
 }
 
+body.in-app-browser .brand {
+    color: #1f2937;
+    text-shadow: none;
+}
+
+body.in-app-browser .page-footer {
+    color: #4b5563;
+}
+
+body.in-app-browser .page-footer a {
+    color: var(--secondary-purple);
+}
+
 @media (max-width: 600px) {
     body {
+        display: block;
         padding: 18px;
     }
 
+    .page-container {
+        max-width: 100%;
+        align-items: stretch;
+    }
+
+    .brand {
+        justify-content: center;
+    }
+
     .form-card {
-        padding: 28px 24px;
+        margin-top: 12px;
+        padding: 28px 22px;
+        border-radius: 14px;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
     }
 
     .form-header h1 {
         font-size: 1.6rem;
+    }
+
+    .btn-primary {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+
+    .page-footer {
+        font-size: 0.85rem;
+    }
+}
+
+@media (min-width: 900px) {
+    .page-container {
+        max-width: 960px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+        align-items: stretch;
+        gap: 36px;
+    }
+
+    .brand {
+        align-self: stretch;
+        flex-direction: column;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.14);
+        padding: 48px 42px;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        text-shadow: none;
+        color: #1f2937;
+    }
+
+    .brand strong {
+        font-size: 2rem;
+        color: #111827;
+        letter-spacing: 0.6px;
+    }
+
+    .brand small {
+        font-size: 1.05rem;
+        color: #4b5563;
+        opacity: 1;
+    }
+
+    body.in-app-browser .brand {
+        background: #fff;
+        box-shadow: var(--card-shadow);
+    }
+
+    .form-card {
+        padding: 48px 44px;
     }
 }

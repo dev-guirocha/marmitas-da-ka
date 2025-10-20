@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const ua = navigator.userAgent || navigator.vendor || '';
     const isInAppBrowser = /Instagram|FBAN|FBAV|Line|Twitter|Snapchat|Messenger/i.test(ua);
+    if (isInAppBrowser) {
+        document.body.classList.add('in-app-browser');
+    }
 
     // Funções para mostrar/limpar erros e notificações
     const showFieldError = (inputEl, message) => {
@@ -254,6 +257,27 @@ document.addEventListener('DOMContentLoaded', () => {
     signUpPhoneEl?.addEventListener('input', (event) => {
         event.target.value = formatPhone(event.target.value);
     });
+
+    const applyInAppFocusPatch = () => {
+        if (!isInAppBrowser) return;
+        const focusTargets = [signInEmailEl, signInPasswordEl, signUpNameEl, signUpEmailEl, signUpPhoneEl, signUpPasswordEl]
+            .filter(Boolean);
+        focusTargets.forEach((input) => {
+            const ensureFocus = () => {
+                requestAnimationFrame(() => {
+                    input.focus({ preventScroll: true });
+                    if (input.setSelectionRange && input.type !== 'password') {
+                        const length = input.value.length;
+                        input.setSelectionRange(length, length);
+                    }
+                });
+            };
+            input.addEventListener('touchstart', ensureFocus, { passive: true });
+            input.addEventListener('mousedown', ensureFocus);
+        });
+    };
+
+    applyInAppFocusPatch();
 
     // ===== Login com Firebase =====
     if (signInForm) {
