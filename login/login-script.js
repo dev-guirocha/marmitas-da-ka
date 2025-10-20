@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ===== Helpers =====
-    const qs = (sel, el = document) => el.querySelector(sel);
-    const qsa = (sel, el = document) => Array.from(el.querySelectorAll(sel));
+    const qs = (sel, el = document) => (el ? el.querySelector(sel) : null);
+    const qsa = (sel, el = document) => (el ? Array.from(el.querySelectorAll(sel)) : []);
     const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).toLowerCase());
     const redirect = (url) => { window.location.href = url; };
 
@@ -233,59 +233,26 @@ document.addEventListener('DOMContentLoaded', () => {
         try { localStorage.setItem('selectedPackage', selectedPackage); } catch (_) {}
     }
 
-    const container = qs('#container');
-    const signInForm = qs('#signInForm');
-    const signUpForm = qs('#signUpForm');
-    const formTabs = qsa('.form-tab');
-    const formPanels = qsa('.form-container');
-    const switchButtons = qsa('.switch-button');
+    const signInForm = document.getElementById('signInForm');
+    const signUpForm = document.getElementById('signUpForm');
 
-    const signInEmailEl = qs('#signInEmail', signInForm);
-    const signInPasswordEl = qs('#signInPassword', signInForm);
-    const signUpNameEl = qs('#signUpName', signUpForm);
-    const signUpEmailEl = qs('#signUpEmail', signUpForm);
-    const signUpPhoneEl = qs('#signUpPhone', signUpForm);
-    const signUpPasswordEl = qs('#signUpPassword', signUpForm);
-    const signInSubmitBtn = signInForm?.querySelector('button[type="submit"]');
-    const signUpSubmitBtn = signUpForm?.querySelector('button[type="submit"]');
+    const signInEmailEl = signInForm ? signInForm.querySelector('#signInEmail') : null;
+    const signInPasswordEl = signInForm ? signInForm.querySelector('#signInPassword') : null;
+    const signUpNameEl = signUpForm ? signUpForm.querySelector('#signUpName') : null;
+    const signUpEmailEl = signUpForm ? signUpForm.querySelector('#signUpEmail') : null;
+    const signUpPhoneEl = signUpForm ? signUpForm.querySelector('#signUpPhone') : null;
+    const signUpPasswordEl = signUpForm ? signUpForm.querySelector('#signUpPassword') : null;
+    const signInSubmitBtn = signInForm ? signInForm.querySelector('button[type="submit"]') : null;
+    const signUpSubmitBtn = signUpForm ? signUpForm.querySelector('button[type="submit"]') : null;
 
     [signInEmailEl, signInPasswordEl, signUpNameEl, signUpEmailEl, signUpPhoneEl, signUpPasswordEl]
-    .filter(Boolean)
-    .forEach((el) => {
-        el.addEventListener('input', () => clearFieldError(el));
-    });
+        .filter(Boolean)
+        .forEach((el) => {
+            el.addEventListener('input', () => clearFieldError(el));
+        });
 
     signUpPhoneEl?.addEventListener('input', (event) => {
         event.target.value = formatPhone(event.target.value);
-    });
-
-    const setActiveView = (view, { focus = true } = {}) => {
-        if (!container) return;
-        const normalized = view === 'signup' ? 'signup' : 'signin';
-        container.dataset.view = normalized;
-        formPanels.forEach((panel) => {
-            const panelView = panel.classList.contains('sign-up-container') ? 'signup' : 'signin';
-            panel.classList.toggle('is-active', panelView === normalized);
-        });
-        formTabs.forEach((tab) => {
-            tab.classList.toggle('is-active', tab.dataset.target === normalized);
-        });
-
-        if (focus) {
-            const focusTarget = normalized === 'signup' ? signUpNameEl : signInEmailEl;
-            focusTarget?.focus();
-        }
-    };
-
-    const initialView = container?.dataset.view || 'signin';
-    setActiveView(initialView, { focus: false });
-
-    formTabs.forEach((tab) => {
-        tab.addEventListener('click', () => setActiveView(tab.dataset.target));
-    });
-
-    switchButtons.forEach((btn) => {
-        btn.addEventListener('click', () => setActiveView(btn.dataset.target));
     });
 
     // ===== Login com Firebase =====

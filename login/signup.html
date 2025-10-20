@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Marmitas da Ka</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="login-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+</head>
+
+<body class="auth-page signup-page">
+    <div class="page-container">
+        <div class="form-card">
+            <header class="form-header">
+                <h1>Crie a sua conta</h1>
+                <p>Preencha os dados abaixo para começar a receber nossas marmitas.</p>
+            </header>
+
+            <form action="#" id="signUpForm" novalidate>
+                <label class="sr-only" for="signUpName">Nome completo</label>
+                <input type="text" id="signUpName" name="name" placeholder="Nome Completo" required autocomplete="name" />
+                <span class="form-error-message" id="signUpName-error"></span>
+
+                <label class="sr-only" for="signUpEmail">Email</label>
+                <input type="email" id="signUpEmail" name="email" placeholder="Email" required autocomplete="email" />
+                <span class="form-error-message" id="signUpEmail-error"></span>
+
+                <label class="sr-only" for="signUpPhone">Celular</label>
+                <input type="tel" id="signUpPhone" name="phone" placeholder="Celular (com DDD)" required autocomplete="tel-national" />
+                <span class="form-error-message" id="signUpPhone-error"></span>
+
+                <label class="sr-only" for="signUpPassword">Senha</label>
+                <input type="password" id="signUpPassword" name="password" placeholder="Senha (mínimo 8 caracteres)" required minlength="8" autocomplete="new-password" />
+                <span class="form-error-message" id="signUpPassword-error"></span>
+                
+                <button type="submit" class="btn-primary">Criar Conta</button>
+            </form>
+
+            <footer class="form-footer">
+                <p>Já possui conta?
+                    <a href="login.html" class="link">Entrar</a>
+                </p>
+            </footer>
+        </div>
+
+        <footer class="page-footer">
+            <p><a href="../index.html">Voltar para a Homepage</a></p>
+        </footer>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script src="../firebase-config.js"></script> 
+    <script src="login-script.js"></script>
+</body>
+</html>
