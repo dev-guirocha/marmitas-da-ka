@@ -235,6 +235,7 @@ footer a { color: white; text-decoration: none; }
 /* --- Ajustes para navegadores in-app (ex: Instagram) --- */
 body.in-app-browser .container {
     perspective: none;
+    overflow: visible;
 }
 body.in-app-browser .overlay-container {
     display: none !important;

@@ -8,6 +8,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const isInAppBrowser = /Instagram|FBAN|FBAV|Line|Twitter|Snapchat|Messenger/i.test(ua);
     if (isInAppBrowser) {
         document.body.classList.add('in-app-browser');
+
+        const container = qs('#container');
+        const formsWrapper = qs('.forms-wrapper');
+        const overlayContainer = qs('.overlay-container');
+        const mobileSwitches = document.querySelectorAll('.mobile-switch');
+
+        container?.classList.remove('right-panel-active');
+        container?.style.setProperty('perspective', 'none');
+        container?.style.setProperty('overflow', 'visible');
+
+        if (overlayContainer?.parentNode) {
+            overlayContainer.parentNode.removeChild(overlayContainer);
+        }
+
+        if (formsWrapper) {
+            formsWrapper.style.setProperty('position', 'relative');
+            formsWrapper.style.setProperty('width', '100%');
+            formsWrapper.style.setProperty('height', 'auto');
+            formsWrapper.style.setProperty('transform', 'none');
+            formsWrapper.style.setProperty('transform-style', 'flat');
+            formsWrapper.style.setProperty('z-index', 'auto');
+        }
+
+        document.querySelectorAll('.form-container').forEach((el) => {
+            el.style.setProperty('position', 'relative');
+            el.style.setProperty('width', '100%');
+            el.style.setProperty('height', 'auto');
+            el.style.setProperty('opacity', '1');
+            el.style.setProperty('transform', 'none');
+            el.style.setProperty('backface-visibility', 'visible');
+            el.style.setProperty('pointer-events', 'auto');
+        });
+
+        mobileSwitches.forEach((el) => el.style.setProperty('display', 'block'));
     }
 
     // Funções para mostrar/limpar erros e notificações
