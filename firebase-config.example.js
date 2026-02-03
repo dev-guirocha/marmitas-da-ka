@@ -17,10 +17,14 @@ const ALLOWED_ORIGINS = [
 ];
 
 if (typeof window !== 'undefined') {
-  const { origin } = window.location;
-  if (!ALLOWED_ORIGINS.includes(origin)) {
+  const { origin, hostname } = window.location;
+  const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+  if (!isLocalHost && !ALLOWED_ORIGINS.includes(origin)) {
     console.error(`[Firebase] Origem não autorizada (${origin}). Atualize ALLOWED_ORIGINS com os domínios liberados.`);
     throw new Error('Origem não autorizada para o Firebase.');
+  }
+  if (isLocalHost) {
+    console.info('[Firebase] Ambiente local detectado. Ignorando verificação de origem.');
   }
 }
 

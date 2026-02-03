@@ -1,27 +1,81 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar Pedido - Marmitas da Ka</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="checkout-style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 </head>
+
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="loader"></div>
     </div>
 
-    <div class="background-container">
-        <div class="checkout-page-container" id="container">
-            <div class="forms-wrapper">
+    <header>
+        <nav class="navbar" aria-label="Navegação principal">
+            <a href="../index.html#inicio" class="logo">Marmitas da <span class="logo-ka">Ka</span></a>
+
+            <div class="nav-links" id="navLinks">
+                <a href="../index.html#pacotes">Pacotes</a>
+                <a href="../index.html#sobre">Sobre</a>
+                <a href="../index.html#contato">Contato</a>
+            </div>
+
+            <div class="nav-actions">
+                <a href="../login/dashboard/dashboard.html" class="btn btn-login">
+                    <i class="fas fa-user" aria-hidden="true"></i> Minha Conta
+                </a>
+            </div>
+
+            <button type="button" class="hamburger" id="hamburger" aria-label="Abrir menu de navegação"
+                aria-expanded="false" aria-controls="navLinks">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="section-container checkout-hero" id="checkout-hero">
+            <div class="hero-box hero-box-checkout">
+                <span class="hero-pill">
+                    <i class="fas fa-lock" aria-hidden="true"></i> Checkout seguro
+                </span>
+                <h1>Finalize seu pedido com tranquilidade</h1>
+                <p>Revise suas marmitas, confirme o endereço e defina a forma de pagamento. Todo o processo acontece com
+                    a mesma identidade visual e carinho do restante do site.</p>
+                <div class="hero-buttons">
+                    <a href="#checkout" class="btn btn-primary">Ir para o checkout</a>
+                    <a href="../login/dashboard/dashboard.html" class="btn btn-secondary">Voltar para a loja</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-container checkout-section" id="checkout">
+            <h2>Detalhes do Pedido</h2>
+            <p class="section-subtitle">
+                Confira se está tudo certo com o seu pacote, selecione o pagamento e informe o endereço de entrega em
+                Aracaju.
+            </p>
+
+            <div class="checkout-page-container" id="container">
+                <!-- Coluna da Esquerda: Carrinho -->
                 <div class="form-container cart-container">
                     <div class="form-header">
-                        <h2><i class="fas fa-shopping-cart" aria-hidden="true"></i> Revise seu Pedido</h2>
+                        <h2><i class="fas fa-shopping-cart" aria-hidden="true"></i> Seu Pedido</h2>
                     </div>
                     <div class="form-content" id="cart-content">
-                        <div id="cart-summary"><p class="loading">Carregando seu carrinho...</p></div>
+                        <div id="cart-summary">
+                            <p class="loading">Carregando seu carrinho...</p>
+                        </div>
                         <div class="cart-total">
                             <strong>Total:</strong>
                             <strong id="total-price">R$ 0,00</strong>
@@ -34,7 +88,7 @@
                                     <div class="payment-details">
                                         <i class="fas fa-qrcode" aria-hidden="true"></i>
                                         <span>PIX</span>
-                                        <small>Enviaremos a chave para o seu WhatsApp</small>
+                                        <small>Chave enviada no WhatsApp</small>
                                     </div>
                                 </label>
                                 <label class="payment-option" for="cash" data-method="cash">
@@ -42,104 +96,101 @@
                                     <div class="payment-details">
                                         <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
                                         <span>Dinheiro</span>
-                                        <small>Pague na entrega com troco se precisar</small>
+                                        <small>Pagamento na entrega</small>
                                     </div>
                                 </label>
                             </div>
                         </div>
                     </div>
                 </div>
-                </div>
+
+                <!-- Coluna da Direita: Entrega -->
                 <div class="form-container delivery-container">
                     <form id="delivery-form">
-                    <div class="form-header">
-                        <h2><i class="fas fa-map-marker-alt" aria-hidden="true"></i> Dados da Entrega</h2>
-                    </div>
-                    <div class="form-content">
-                        <div class="delivery-notice">
-                            <p>Entregas apenas em <strong>Aracaju, SE</strong>.</p>
+                        <div class="form-header">
+                            <h2><i class="fas fa-map-marker-alt" aria-hidden="true"></i> Dados da Entrega</h2>
                         </div>
-                        <div class="input-wrapper">
-                            <label class="sr-only" for="cep">CEP</label>
-                            <input type="tel" id="cep" placeholder="CEP" required maxlength="9" aria-describedby="error-cep">
-                            <div id="cep-spinner" class="spinner hidden"></div>
-                        </div>
-                        <span class="field-error" id="error-cep" role="alert" aria-live="polite"></span>
+                        <div class="form-content">
+                            <div class="delivery-notice">
+                                <p>Entregas apenas em <strong>Aracaju, SE</strong>.</p>
+                            </div>
+                            <div class="input-wrapper">
+                                <label class="sr-only" for="cep">CEP</label>
+                                <input type="tel" id="cep" placeholder="CEP" required maxlength="9"
+                                    aria-describedby="error-cep">
+                                <div id="cep-spinner" class="spinner hidden"></div>
+                            </div>
+                            <span class="field-error" id="error-cep" role="alert" aria-live="polite"></span>
 
-                        <label class="sr-only" for="endereco">Endereço</label>
-                        <input type="text" id="endereco" placeholder="Endereço (Rua, Av.)" required aria-describedby="error-endereco">
-                        <span class="field-error" id="error-endereco" role="alert" aria-live="polite"></span>
+                            <label class="sr-only" for="endereco">Endereço</label>
+                            <input type="text" id="endereco" placeholder="Endereço (Rua, Av.)" required
+                                aria-describedby="error-endereco">
+                            <span class="field-error" id="error-endereco" role="alert" aria-live="polite"></span>
 
-                        <div class="form-row">
-                            <div class="form-row-field">
-                                <label class="sr-only" for="numero">Número</label>
-                                <input type="text" id="numero" placeholder="Número" required aria-describedby="error-numero">
-                                <span class="field-error" id="error-numero" role="alert" aria-live="polite"></span>
+                            <div class="form-row">
+                                <div class="form-row-field">
+                                    <label class="sr-only" for="numero">Número</label>
+                                    <input type="text" id="numero" placeholder="Número" required
+                                        aria-describedby="error-numero">
+                                    <span class="field-error" id="error-numero" role="alert"
+                                        aria-live="polite"></span>
+                                </div>
+                                <div class="form-row-field">
+                                    <label class="sr-only" for="bairro">Bairro</label>
+                                    <input type="text" id="bairro" placeholder="Bairro" required
+                                        aria-describedby="error-bairro">
+                                    <span class="field-error" id="error-bairro" role="alert"
+                                        aria-live="polite"></span>
+                                </div>
                             </div>
-                            <div class="form-row-field">
-                                <label class="sr-only" for="bairro">Bairro</label>
-                                <input type="text" id="bairro" placeholder="Bairro" required aria-describedby="error-bairro">
-                                <span class="field-error" id="error-bairro" role="alert" aria-live="polite"></span>
+                            <label class="sr-only" for="complemento">Complemento</label>
+                            <input type="text" id="complemento" placeholder="Complemento (Apto, Bloco, etc.)"
+                                aria-describedby="error-complemento">
+                            <span class="field-error" id="error-complemento" role="alert" aria-live="polite"></span>
+                            <div class="form-row checkbox-row">
+                                <input type="checkbox" id="save-address" name="save-address">
+                                <label for="save-address">Guardar endereço para a próxima compra</label>
                             </div>
-                        </div>
-                        <label class="sr-only" for="complemento">Complemento</label>
-                        <input type="text" id="complemento" placeholder="Complemento (Apto, Bloco, etc.)" aria-describedby="error-complemento">
-                        <span class="field-error" id="error-complemento" role="alert" aria-live="polite"></span>
-                        <div class="form-row checkbox-row">
-                            <input type="checkbox" id="save-address" name="save-address">
-                            <label for="save-address">Guardar endereço para a próxima compra</label>
-                        </div>
-                        
-                        <div class="delivery-time">
-                            <h3>Horário de Entrega</h3>
-                            <div class="delivery-time-select">
-                                <i class="fas fa-clock" aria-hidden="true"></i>
-                                <label class="sr-only" for="delivery-time-select">Horário de entrega</label>
-                                <select id="delivery-time-select" required aria-describedby="error-delivery">
-                                    <option value="" disabled selected>Selecione um horário</option>
-                                    <option value="manha">Manhã (08h - 12h)</option>
-                                    <option value="tarde">Tarde (13h - 18h)</option>
-                                    <option value="noite">Noite (18h - 22h)</option>
-                                </select>
+
+                            <div class="delivery-time">
+                                <h3>Horário de Entrega</h3>
+                                <div class="delivery-time-select">
+                                    <i class="fas fa-clock" aria-hidden="true"></i>
+                                    <label class="sr-only" for="delivery-time-select">Horário de entrega</label>
+                                    <select id="delivery-time-select" required aria-describedby="error-delivery">
+                                        <option value="" disabled selected>Selecione um horário</option>
+                                        <option value="manha">Manhã (08h - 12h)</option>
+                                        <option value="tarde">Tarde (13h - 18h)</option>
+                                        <option value="noite">Noite (18h - 22h)</option>
+                                    </select>
+                                </div>
+                                <span class="field-error" id="error-delivery" role="alert" aria-live="polite"></span>
+                                <p class="delivery-time-hint">
+                                    <i class="fas fa-info-circle" aria-hidden="true"></i> A produção é entregue na
+                                    segunda-feira subsequente. Ajustamos juntos qualquer detalhe pelo WhatsApp.
+                                </p>
                             </div>
-                            <span class="field-error" id="error-delivery" role="alert" aria-live="polite"></span>
-                            <p class="delivery-time-hint">
-                                <i class="fas fa-info-circle" aria-hidden="true"></i> A produção é entregue na segunda-feira subsequente. Ajustamos juntos qualquer detalhe pelo WhatsApp.
-                            </p>
+
+                            <button type="submit" class="btn btn-primary btn-large btn-finish-order">Finalizar
+                                Pedido</button>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-large btn-finish-order">Finalizar Pedido</button>
-                    </div>
-                </form>
+                    </form>
                 </div>
             </div>
-    
-            <div class="overlay-container">
-                <div class="overlay">
-                    <div class="overlay-panel overlay-left">
-                        <h1>Quase lá!</h1>
-                        <p>Falta pouco! Preencha seus dados para receber suas marmitas quentinhas em casa.</p>
-                        <button class="ghost action-button" id="goToCart">Revisar Carrinho</button>
-                    </div>
-                    <div class="overlay-panel overlay-right">
-                        <h1>Tudo certo por aqui?</h1>
-                        <p>Confirme os itens e o valor. Se estiver tudo OK, clique abaixo para ir para a entrega.</p>
-                        <button class="ghost action-button" id="goToDelivery">Confirmar e Ir para Entrega</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <footer class="checkout-footer">
-        <a href="../login/dashboard/dashboard.html"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar para a Loja</a>
+        <a href="../login/dashboard/dashboard.html"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar para a
+            Loja</a>
     </footer>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
+
     <script src="../firebase-config.js"></script>
-     <script src="checkout-script.js"></script>
+    <script src="checkout-script.js"></script>
 </body>
+
 </html>

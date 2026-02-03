@@ -29,6 +29,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     new Promise((resolve) => setTimeout(() => resolve('timeout'), timeoutMs)),
   ]);
 
+  // ===== Navegação e scroll suave =====
+  const initNavigation = () => {
+    const navLinks = document.getElementById('navLinks');
+    const hamburger = document.getElementById('hamburger');
+    if (!navLinks || !hamburger) return;
+
+    const updateNavState = () => {
+      const isActive = hamburger.classList.contains('active');
+      const isMobile = window.matchMedia('(max-width: 992px)').matches;
+      navLinks.setAttribute('aria-hidden', String(isMobile ? !isActive : false));
+      hamburger.setAttribute('aria-expanded', String(isActive));
+      document.body.style.overflow = isActive && isMobile ? 'hidden' : '';
+    };
+
+    const closeNav = () => {
+      hamburger.classList.remove('active');
+      navLinks.classList.remove('active');
+      updateNavState();
+    };
+
+    hamburger.addEventListener('click', () => {
+      const toggled = hamburger.classList.toggle('active');
+      navLinks.classList.toggle('active', toggled);
+      updateNavState();
+    });
+
+    navLinks.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', closeNav);
+    });
+
+    window.addEventListener('resize', updateNavState);
+    updateNavState();
+  };
+
+  const enableSmoothScroll = () => {
+    document.querySelectorAll('a[href^="#"]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const targetId = link.getAttribute('href');
+        if (!targetId || targetId.length <= 1) return;
+        const targetEl = document.querySelector(targetId);
+        if (!targetEl) return;
+
+        event.preventDefault();
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  };
+
+  initNavigation();
+  enableSmoothScroll();
+
   // ===== Endereço (persistência) - ATUALIZADO =====
   const ADDRESS_KEY = 'mdk_address_v1';
   const addressFields = {
@@ -165,8 +216,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ===== Elements =====
   const container         = qs('#container');
-  const goToDeliveryBtn   = qs('#goToDelivery');
-  const goToCartBtn       = qs('#goToCart');
   const summaryContainer  = qs('#cart-summary');
   const totalPriceEl      = qs('#total-price');
   const deliveryForm      = qs('#delivery-form');
@@ -199,26 +248,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     delivery: deliverySelect,
   };
   
-  // ===== LÓGICA DO FLIP/SCROLL AUTOMÁTICO (SUGESTÃO APLICADA) =====
+  // ===== LÓGICA DE SCROLL AUTOMÁTICO (MOBILE) =====
   paymentInputs.forEach((input) => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
 
-        // Verifica a largura da tela no momento do clique
-        if (window.innerWidth > 768) {
-            // --- COMPORTAMENTO DESKTOP: Animação de Flip ---
-            setTimeout(() => {
-                container?.classList.add('right-panel-active');
-            }, 200); // 200 milissegundos
-            
-        } else {
-            // --- COMPORTAMENTO MOBILE: Scroll Suave ---
-            if (deliveryFormContainer) {
-                deliveryFormContainer.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
+        // Apenas scroll suave no mobile
+        if (window.innerWidth <= 768 && deliveryFormContainer) {
+            deliveryFormContainer.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
         }
     });
   });
@@ -340,17 +380,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!cart || !cart.packageName) {
       summaryContainer.innerHTML = '<p>Seu carrinho está vazio. Volte para a loja para escolher um pacote!</p>';
       totalPriceEl.innerText = formatBRL(0);
-      if (goToDeliveryBtn) {
-        goToDeliveryBtn.disabled = true;
-        goToDeliveryBtn.style.opacity = '0.5';
-      }
+
       return;
     }
 
-    if (goToDeliveryBtn) {
-      goToDeliveryBtn.disabled = false;
-      goToDeliveryBtn.style.opacity = '1';
-    }
+
 
     const packageDiv = document.createElement('div');
     packageDiv.className = 'summary-package';
@@ -425,9 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Navegação container (Botões manuais)
-  goToDeliveryBtn?.addEventListener('click', () => container?.classList.add('right-panel-active'));
-  goToCartBtn?.addEventListener('click', () => container?.classList.remove('right-panel-active'));
+
 
   // ===== CEP / ViaCEP =====
   const clearAddressForm = () => {

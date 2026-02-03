@@ -15,14 +15,20 @@ const ALLOWED_ORIGINS = [
   'https://dev-guirocha.github.io',
   'https://dev-guirocha.github.io/marmitas-da-ka',
   'http://localhost:5500',
-  'http://127.0.0.1:5500'
+  'http://localhost:5501',
+  'http://127.0.0.1:5500',
+  'http://127.0.0.1:5501'
 ];
 
 if (typeof window !== 'undefined') {
-  const { origin } = window.location;
-  if (!ALLOWED_ORIGINS.includes(origin)) {
+  const { origin, hostname } = window.location;
+  const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+  if (!isLocalHost && !ALLOWED_ORIGINS.includes(origin)) {
     console.error(`[Firebase] Origem não autorizada (${origin}). Bloqueando inicialização.`);
     throw new Error('Origem não autorizada para o Firebase. Atualize ALLOWED_ORIGINS em firebase-config.js.');
+  }
+  if (isLocalHost) {
+    console.info('[Firebase] Ambiente local detectado. Ignorando validação de origem para facilitar o desenvolvimento.');
   }
 }
 
