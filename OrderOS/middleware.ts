@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from "next/server";
+import { isAuthed } from "@/lib/auth";
+
+const PUBLIC_PATHS = new Set(["/login", "/api/health", "/api/auth/login", "/api/auth/logout"]);
+
+function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_PATHS.has(pathname)) {
+    return true;
+  }
+
+  return pathname.startsWith("/_next") || pathname === "/favicon.ico";
+}
+
+export function middleware(req: NextRequest): NextResponse {
+  const { pathname } = req.nextUrl;
+
+  if (isPublicPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  if (isAuthed(req)) {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/api")) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const loginUrl = req.nextUrl.clone();
+  loginUrl.pathname = "/login";
+  loginUrl.searchParams.set("next", pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+};

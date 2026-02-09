@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OrderStatus {
+  RECEBIDO
+  PREPARANDO
+  PRONTO
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  CANCELADO
+}
+
+enum PaymentStatus {
+  PENDENTE
+  PAGO
+  PARCIAL
+  ESTORNADO
+}
+
+enum PaymentMethod {
+  PIX
+  DINHEIRO
+  CARTAO
+  OUTRO
+}
+
+enum OrderSource {
+  SITE_LISTA
+  WHATSAPP_TEXTO
+  MANUAL
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String   @unique
+  addressText String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Menu {
+  id        String   @id @default(cuid())
+  name      String
+  monthRef  String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items MenuItem[]
+}
+
+model MenuItem {
+  id         String    @id @default(cuid())
+  menuId     String
+  name       String
+  priceCents Int
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  menu       Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+}
+
+model Order {
+  id                  String        @id @default(cuid())
+  source              OrderSource
+  customerId          String
+  statusPedido        OrderStatus
+  statusPagamento     PaymentStatus
+  paymentMethod       PaymentMethod
+  totalCents          Int
+  paidCents           Int           @default(0)
+  deliveryFeeCents    Int           @default(0)
+  addressSnapshot     String
+  windowSnapshot      String?
+  deliveryDate        DateTime      @db.Date
+  deliveryWindowStart String?
+  deliveryWindowEnd   String?
+  deliveryOrder       Int           @default(0)
+  notes               String?
+  importRawHash       String?       @unique
+  itemsHash           String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  customer Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items    OrderItem[]
+
+  @@index([deliveryDate])
+  @@index([statusPedido, statusPagamento])
+  @@index([customerId, deliveryDate, totalCents])
+  @@index([itemsHash])
+}
+
+model OrderItem {
+  id            String    @id @default(cuid())
+  orderId       String
+  menuItemId    String?
+  freeName      String?
+  qty           Int
+  unitPriceCents Int?
+  subtotalCents Int?
+  createdAt     DateTime  @default(now())
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+}
