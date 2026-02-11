@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
 
 const PUBLIC_PATHS = new Set(["/login", "/api/health", "/api/auth/login", "/api/auth/logout"]);
+const COOKIE_NAME = "marmita_admin";
+
+function isAuthed(req: NextRequest): boolean {
+  const expected = process.env.APP_PASSWORD;
+  if (!expected) {
+    return false;
+  }
+
+  const current = req.cookies.get(COOKIE_NAME)?.value;
+  return current === expected;
+}
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) {
