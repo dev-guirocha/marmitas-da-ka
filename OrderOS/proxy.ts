@@ -21,7 +21,7 @@ function isPublicPath(pathname: string): boolean {
   return pathname.startsWith("/_next") || pathname === "/favicon.ico";
 }
 
-export function middleware(req: NextRequest): NextResponse {
+export function proxy(req: NextRequest): NextResponse {
   try {
     const { pathname } = req.nextUrl;
 
@@ -42,7 +42,7 @@ export function middleware(req: NextRequest): NextResponse {
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   } catch (error) {
-    console.error("middleware error", error);
+    console.error("proxy error", error);
     return NextResponse.next();
   }
 }
