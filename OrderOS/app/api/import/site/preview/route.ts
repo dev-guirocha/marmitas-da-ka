@@ -32,20 +32,22 @@ export async function POST(req: NextRequest) {
     statusPedido: string;
     statusPagamento: string;
     createdAt: Date;
+    sameTotal: boolean;
+    sameItems: boolean;
+    matchScore: number;
   }> = [];
 
   if (parsed.customer.phone && parsed.delivery.date) {
-    dedupeCandidates = await prisma.order.findMany({
+    const candidates = await prisma.order.findMany({
       where: {
         customer: { phone: parsed.customer.phone },
         deliveryDate: parseDateOnlyToUTC(parsed.delivery.date),
-        ...(typeof parsed.order.totalCents === "number" ? { totalCents: parsed.order.totalCents } : {}),
-        ...(itemsHash ? { itemsHash } : {}),
       },
       select: {
         id: true,
         deliveryDate: true,
         totalCents: true,
+        itemsHash: true,
         statusPedido: true,
         statusPagamento: true,
         createdAt: true,
@@ -53,6 +55,27 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       take: 20,
     });
+
+    dedupeCandidates = candidates
+      .map((candidate) => {
+        const sameTotal =
+          typeof parsed.order.totalCents === "number" && candidate.totalCents === parsed.order.totalCents;
+        const sameItems = Boolean(itemsHash && candidate.itemsHash && candidate.itemsHash === itemsHash);
+        const matchScore = (sameTotal ? 2 : 0) + (sameItems ? 2 : 0);
+
+        return {
+          ...candidate,
+          sameTotal,
+          sameItems,
+          matchScore,
+        };
+      })
+      .sort((a, b) => {
+        if (b.matchScore !== a.matchScore) {
+          return b.matchScore - a.matchScore;
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
   }
 
   return NextResponse.json({
