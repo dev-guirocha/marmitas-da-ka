@@ -4,7 +4,7 @@ const PUBLIC_PATHS = new Set(["/login", "/api/health", "/api/auth/login", "/api/
 const COOKIE_NAME = "marmita_admin";
 
 function isAuthed(req: NextRequest): boolean {
-  const expected = process.env.APP_PASSWORD;
+  const expected = process.env.APP_PASSWORD ?? "";
   if (!expected) {
     return false;
   }
@@ -22,24 +22,29 @@ function isPublicPath(pathname: string): boolean {
 }
 
 export function middleware(req: NextRequest): NextResponse {
-  const { pathname } = req.nextUrl;
+  try {
+    const { pathname } = req.nextUrl;
 
-  if (isPublicPath(pathname)) {
+    if (isPublicPath(pathname)) {
+      return NextResponse.next();
+    }
+
+    if (isAuthed(req)) {
+      return NextResponse.next();
+    }
+
+    if (pathname.startsWith("/api")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const loginUrl = req.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  } catch (error) {
+    console.error("middleware error", error);
     return NextResponse.next();
   }
-
-  if (isAuthed(req)) {
-    return NextResponse.next();
-  }
-
-  if (pathname.startsWith("/api")) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  const loginUrl = req.nextUrl.clone();
-  loginUrl.pathname = "/login";
-  loginUrl.searchParams.set("next", pathname);
-  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
