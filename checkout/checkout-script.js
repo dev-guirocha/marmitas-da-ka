@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const PATH_DASHBOARD = '../login/dashboard/dashboard.html';
   const PATH_LOGIN = '../login/login.html';
   const WHATSAPP_NUMBER = '5579991428025';
-  const PAYMENT_LABELS = { pix: 'PIX', cash: 'Dinheiro' };
+  const PAYMENT_LABELS = { pix: 'PIX' };
   const DELIVERY_LABELS = {
     manha: 'Manhã (08h às 12h)',
     tarde: 'Tarde (13h às 18h)',
@@ -285,8 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   const getSelectedPaymentMethod = () => {
-    const selected = document.querySelector('input[name="payment"]:checked');
-    return selected?.value || 'pix';
+    return 'pix';
   };
 
   const getDeliverySlotLabel = (slot) => DELIVERY_LABELS[slot] || 'A combinar';
