@@ -501,16 +501,31 @@ logoutBtn?.addEventListener('click', () => {
   const packageButtons = Array.from(document.querySelectorAll('.add-package-to-cart'));
 
   const upgradeMap = {
-    'Plano Praticidade': [
-      { name: 'Plano Constância', credits: 10 },
-      { name: 'Plano Equilíbrio', credits: 20 },
+    'Combo Praticidade': [
+      { name: 'Combo Constância', credits: 10 },
+      { name: 'Combo Foco', credits: 15 },
+    ],
+    'Combo Constância': [
+      { name: 'Combo Foco', credits: 15 },
+      { name: 'Combo Equilíbrio', credits: 20 },
+    ],
+    'Combo Foco': [
+      { name: 'Combo Equilíbrio', credits: 20 },
+      { name: 'Combo Performance', credits: 30 },
+    ],
+    'Combo Equilíbrio': [
+      { name: 'Combo Performance', credits: 30 },
+      { name: 'Combo Resultado', credits: 40 },
+    ],
+    'Combo Performance': [
+      { name: 'Combo Resultado', credits: 40 },
     ],
   };
 
   function showUpgradeSuggestion(currentName) {
     const suggestions = upgradeMap[currentName];
     if (!suggestions || !suggestions.length) {
-      showNotification('Você já selecionou este plano. Se quiser trocar, escolha outro pacote.', 'info');
+      showNotification('Você já selecionou este pacote. Se quiser trocar, escolha outro combo.', 'info');
       return;
     }
 
@@ -579,7 +594,7 @@ logoutBtn?.addEventListener('click', () => {
     if (upgradeModal?.classList.contains('hidden')) return;
     upgradeModal.classList.add('hidden');
     if (showInfo) {
-      showNotification('Mantivemos o plano atual. Você pode trocar a qualquer momento.', 'info');
+      showNotification('Mantivemos o pacote atual. Você pode trocar a qualquer momento.', 'info');
     }
     pendingUpgrade = null;
   };
@@ -595,7 +610,7 @@ logoutBtn?.addEventListener('click', () => {
     if (targetButton) {
       handlePackageSelection(targetButton, { skipSuggestion: true, skipReplaceConfirm: true });
     } else {
-      showNotification(`Plano ${targetName} não encontrado.`, 'error');
+      showNotification(`Combo ${targetName} não encontrado.`, 'error');
     }
     closeUpgradeModal();
   });
@@ -662,24 +677,36 @@ logoutBtn?.addEventListener('click', () => {
     if (!key) return;
 
     const aliasMap = {
-      semanal: 'semanal',
-      quinzenal: 'quinzenal',
-      mensal: 'mensal',
-      praticidade: 'semanal',
-      'planopraticidade': 'semanal',
-      constancia: 'quinzenal',
-      'planoconstancia': 'quinzenal',
-      equilibrio: 'mensal',
-      'planoequilibrio': 'mensal',
+      semanal: 'praticidade',
+      quinzenal: 'constancia',
+      mensal: 'equilibrio',
+      praticidade: 'praticidade',
+      constancia: 'constancia',
+      foco: 'foco',
+      equilibrio: 'equilibrio',
+      performance: 'performance',
+      resultado: 'resultado',
+      'planopraticidade': 'praticidade',
+      'planoconstancia': 'constancia',
+      'planoequilibrio': 'equilibrio',
+      'combopraticidade': 'praticidade',
+      'comboconstancia': 'constancia',
+      'combofoco': 'foco',
+      'comboequilibrio': 'equilibrio',
+      'comboperformance': 'performance',
+      'comboresultado': 'resultado',
     };
 
     const sanitizedKey = key.replace(/[^a-z0-9]/g, '');
     const canonicalKey = aliasMap[sanitizedKey] || aliasMap[key] || sanitizedKey;
 
     const packageMap = {
-      semanal: { key: 'semanal', name: 'Plano Praticidade' },
-      quinzenal: { key: 'quinzenal', name: 'Plano Constância' },
-      mensal: { key: 'mensal', name: 'Plano Equilíbrio' },
+      praticidade: { key: 'praticidade', name: 'Combo Praticidade' },
+      constancia: { key: 'constancia', name: 'Combo Constância' },
+      foco: { key: 'foco', name: 'Combo Foco' },
+      equilibrio: { key: 'equilibrio', name: 'Combo Equilíbrio' },
+      performance: { key: 'performance', name: 'Combo Performance' },
+      resultado: { key: 'resultado', name: 'Combo Resultado' },
     };
 
     const packageInfo = packageMap[canonicalKey];

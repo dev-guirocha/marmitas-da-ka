@@ -58,7 +58,7 @@
 
         <section id="pacotes" class="section-container">
             <h2>Nossos Pacotes</h2>
-            <p class="section-subtitle">Escolha um plano para começar e depois selecione suas marmitas favoritas no
+            <p class="section-subtitle">Escolha um combo para começar e depois selecione suas marmitas favoritas no
                 cardápio abaixo.</p>
             <div class="pacotes-grid">
                 <div class="pacotes-grid">
@@ -68,12 +68,12 @@
                             <img src="../../assets/prato8.jpeg" width="600" height="596" loading="lazy" decoding="async"
                                 alt="Pacote com cinco refeições fit e balanceadas">
                         </picture>
-                        <h3>Plano Praticidade</h3>
-                        <h4>5 marmitas (semanal)</h4>
+                        <h3>Combo Praticidade</h3>
+                        <h4>5 marmitas</h4>
                         <p>Ideal para garantir seus almoços saudáveis durante a semana.</p>
                         <span class="price">R$ 110,00</span>
                         <button type="button" class="btn btn-primary add-package-to-cart" data-price="110.00"
-                            data-name="Plano Praticidade" data-credits="5" data-package-key="semanal">Quero
+                            data-name="Combo Praticidade" data-credits="5" data-package-key="praticidade">Quero
                             Esse</button>
                     </div>
                     <div class="pacote-card popular">
@@ -83,26 +83,65 @@
                             <img src="../../assets/prato9.jpeg" width="600" height="608" loading="lazy" decoding="async"
                                 alt="Pacote com dez refeições equilibradas e saudáveis">
                         </picture>
-                        <h3>Plano Constância</h3>
-                        <h4>10 marmitas (quinzenal)</h4>
+                        <h3>Combo Constância</h3>
+                        <h4>10 marmitas</h4>
                         <p>Economia e praticidade para duas semanas de alimentação equilibrada.</p>
                         <span class="price">R$ 214,00</span>
                         <button type="button" class="btn btn-primary add-package-to-cart" data-price="214.00"
-                            data-name="Plano Constância" data-credits="10" data-package-key="quinzenal">Quero
+                            data-name="Combo Constância" data-credits="10" data-package-key="constancia">Quero
                             Esse</button>
                     </div>
                     <div class="pacote-card">
                         <picture>
                             <source type="image/webp" srcset="../../assets/prato7.webp" />
                             <img src="../../assets/prato7.jpeg" width="600" height="677" loading="lazy" decoding="async"
+                                alt="Pacote com quinze refeições para manter o foco">
+                        </picture>
+                        <h3>Combo Foco</h3>
+                        <h4>15 marmitas</h4>
+                        <p>Um ritmo consistente para manter o planejamento alimentar no mês.</p>
+                        <span class="price">R$ 315,00</span>
+                        <button type="button" class="btn btn-primary add-package-to-cart" data-price="315.00"
+                            data-name="Combo Foco" data-credits="15" data-package-key="foco">Quero Esse</button>
+                    </div>
+                    <div class="pacote-card">
+                        <picture>
+                            <source type="image/webp" srcset="../../assets/prato8.webp" />
+                            <img src="../../assets/prato8.jpeg" width="600" height="596" loading="lazy" decoding="async"
                                 alt="Pacote com vinte refeições funcionais e nutritivas">
                         </picture>
-                        <h3>Plano Equilíbrio</h3>
-                        <h4>20 marmitas (mensal)</h4>
+                        <h3>Combo Equilíbrio</h3>
+                        <h4>20 marmitas</h4>
                         <p>A solução completa para um mês inteiro sem se preocupar com as refeições.</p>
                         <span class="price">R$ 419,00</span>
                         <button type="button" class="btn btn-primary add-package-to-cart" data-price="419.00"
-                            data-name="Plano Equilíbrio" data-credits="20" data-package-key="mensal">Quero Esse</button>
+                            data-name="Combo Equilíbrio" data-credits="20" data-package-key="equilibrio">Quero Esse</button>
+                    </div>
+                    <div class="pacote-card">
+                        <picture>
+                            <source type="image/webp" srcset="../../assets/prato9.webp" />
+                            <img src="../../assets/prato9.jpeg" width="600" height="608" loading="lazy" decoding="async"
+                                alt="Pacote com trinta refeições para alta constância alimentar">
+                        </picture>
+                        <h3>Combo Performance</h3>
+                        <h4>30 marmitas</h4>
+                        <p>Para quem quer alta constância e praticidade no dia a dia.</p>
+                        <span class="price">R$ 599,00</span>
+                        <button type="button" class="btn btn-primary add-package-to-cart" data-price="599.00"
+                            data-name="Combo Performance" data-credits="30" data-package-key="performance">Quero Esse</button>
+                    </div>
+                    <div class="pacote-card">
+                        <picture>
+                            <source type="image/webp" srcset="../../assets/prato7.webp" />
+                            <img src="../../assets/prato7.jpeg" width="600" height="677" loading="lazy" decoding="async"
+                                alt="Pacote com quarenta refeições para foco total em resultado">
+                        </picture>
+                        <h3>Combo Resultado</h3>
+                        <h4>40 marmitas</h4>
+                        <p>Máxima cobertura para foco total em resultado e organização.</p>
+                        <span class="price">R$ 759,00</span>
+                        <button type="button" class="btn btn-primary add-package-to-cart" data-price="759.00"
+                            data-name="Combo Resultado" data-credits="40" data-package-key="resultado">Quero Esse</button>
                     </div>
                     <div class="pacote-card personalizado">
                         <i class="fas fa-pencil-alt fa-3x"></i>
@@ -271,11 +310,11 @@
 
     <div id="upgradeModal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h2>Sugestão de Plano</h2>
+            <h2>Sugestão de Combo</h2>
             <p id="upgradeMessage" class="upgrade-message"></p>
             <div class="modal-options">
                 <button id="upgradeAcceptBtn" class="btn btn-primary">Quero atualizar</button>
-                <button id="upgradeDeclineBtn" class="btn btn-secondary">Manter plano atual</button>
+                <button id="upgradeDeclineBtn" class="btn btn-secondary">Manter combo atual</button>
             </div>
             <button id="upgradeCloseBtn" class="modal-close-btn">&times;</button>
         </div>
